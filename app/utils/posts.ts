@@ -28,7 +28,6 @@ export const fetchPost = createServerFn()
 
 export const fetchPosts = createServerFn().handler(async () => {
   console.info('Fetching posts...');
-  await new Promise((r) => setTimeout(r, 1000));
   return axios
     .get<Array<PostType>>('https://jsonplaceholder.typicode.com/posts')
     .then((r) => r.data.slice(0, 10));
