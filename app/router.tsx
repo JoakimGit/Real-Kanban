@@ -1,7 +1,7 @@
 import { createRouter as createTanStackRouter } from '@tanstack/react-router';
 import { routeTree } from './routeTree.gen';
-import { DefaultCatchBoundary } from './components/DefaultCatchBoundary';
-import { NotFound } from './components/NotFound';
+import { DefaultCatchBoundary } from './components/router/DefaultCatchBoundary';
+import { NotFound } from './components/router/NotFound';
 import { routerWithQueryClient } from '@tanstack/react-router-with-query';
 import { ConvexProvider, ConvexReactClient } from 'convex/react';
 import { ConvexQueryClient } from '@convex-dev/react-query';
@@ -40,6 +40,7 @@ export function createRouter() {
           {children}
         </ConvexProvider>
       ),
+      scrollRestoration: true,
     }),
     queryClient,
   );

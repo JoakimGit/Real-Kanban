@@ -1,32 +1,26 @@
+import { ClerkProvider, useAuth } from '@clerk/tanstack-react-start';
+import { getAuth } from '@clerk/tanstack-react-start/server';
+import { ConvexQueryClient } from '@convex-dev/react-query';
+import { QueryClient } from '@tanstack/react-query';
 import {
   HeadContent,
-  Link,
   Outlet,
   Scripts,
   createRootRouteWithContext,
   useRouteContext,
 } from '@tanstack/react-router';
-import {
-  ClerkProvider,
-  SignInButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-  useAuth,
-} from '@clerk/tanstack-react-start';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { createServerFn } from '@tanstack/react-start';
-import { QueryClient } from '@tanstack/react-query';
 import * as React from 'react';
-import { getAuth } from '@clerk/tanstack-react-start/server';
 import { getWebRequest } from 'vinxi/http';
-import { DefaultCatchBoundary } from '~/components/DefaultCatchBoundary.js';
-import { NotFound } from '~/components/NotFound.js';
+import { DefaultCatchBoundary } from '~/components/router/DefaultCatchBoundary.js';
+import { NotFound } from '~/components/router/NotFound.js';
 import appCss from '~/styles/app.css?url';
-import { ConvexQueryClient } from '@convex-dev/react-query';
 
 import { ConvexReactClient } from 'convex/react';
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
+import { HeaderBar } from '~/components/layout/HeaderBar';
+import { SideBar } from '../components/layout/SideBar';
 
 const fetchClerkAuth = createServerFn().handler(async () => {
   const auth = await getAuth(getWebRequest());
@@ -121,35 +115,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
-        <div className="p-2 flex gap-2 text-lg">
-          <Link
-            to="/"
-            activeProps={{
-              className: 'font-bold',
-            }}
-            activeOptions={{ exact: true }}
-          >
-            Home
-          </Link>{' '}
-          <Link
-            to="/posts"
-            activeProps={{
-              className: 'font-bold',
-            }}
-          >
-            Posts
-          </Link>
-          <div className="ml-auto">
-            <SignedIn>
-              <UserButton />
-            </SignedIn>
-            <SignedOut>
-              <SignInButton mode="modal" />
-            </SignedOut>
-          </div>
+      <body className="min-h-screen">
+        <div className="grid grid-cols-[auto,1fr] h-full">
+          <SideBar />
+          <HeaderBar />
         </div>
-        <hr />
         {children}
         <TanStackRouterDevtools position="bottom-right" />
         <Scripts />
