@@ -13,12 +13,12 @@ import {
   SignedOut,
   UserButton,
   useAuth,
-} from '@clerk/tanstack-start';
+} from '@clerk/tanstack-react-start';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { createServerFn } from '@tanstack/react-start';
 import { QueryClient } from '@tanstack/react-query';
 import * as React from 'react';
-import { getAuth } from '@clerk/tanstack-start/server';
+import { getAuth } from '@clerk/tanstack-react-start/server';
 import { getWebRequest } from 'vinxi/http';
 import { DefaultCatchBoundary } from '~/components/DefaultCatchBoundary.js';
 import { NotFound } from '~/components/NotFound.js';
@@ -28,7 +28,7 @@ import { ConvexQueryClient } from '@convex-dev/react-query';
 import { ConvexReactClient } from 'convex/react';
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
 
-const fetchClerkAuth = createServerFn({ method: 'GET' }).handler(async () => {
+const fetchClerkAuth = createServerFn().handler(async () => {
   const auth = await getAuth(getWebRequest());
   const token = await auth.getToken({ template: 'convex' });
 
