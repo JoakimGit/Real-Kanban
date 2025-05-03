@@ -11,8 +11,10 @@
     "dev:db": "npx convex dev",
     "build": "vinxi build 2>/dev/null & true 'Ignore vinxi build warnings until tanstack start can run without them (need updated guide)'",
     "start": "vinxi start",
-    "lint": "prettier --check ./app/**/* --ignore-unknown && eslint --ext .ts,.tsx ./app",
-    "format": "prettier --write ./app/**/* --ignore-unknown"
+    "lint": "eslint --ext .ts,.tsx ./app",
+    "prettier:check": "prettier --check ./app/**/* --ignore-unknown",
+    "prettier:format": "prettier --write ./app/**/* --ignore-unknown",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@clerk/tanstack-react-start": "^0.14.3",
@@ -31,15 +33,20 @@
     "vinxi": "0.5.6"
   },
   "devDependencies": {
+    "@tanstack/eslint-plugin-query": "^5.74.7",
+    "@tanstack/eslint-plugin-router": "^1.115.0",
     "@types/node": "^22.15.3",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.7",
     "autoprefixer": "^10.4.21",
     "concurrently": "~8.2.2",
+    "eslint": "^9.26.0",
+    "eslint-plugin-react": "^7.37.5",
     "postcss": "^8.5.3",
     "prettier": "3.5.3",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3",
+    "typescript-eslint": "^8.31.1",
     "vite-tsconfig-paths": "^5.1.4"
   },
   "packageManager": "pnpm@10.10.0"

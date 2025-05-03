@@ -37,6 +37,31 @@ export const Route = createRootRouteWithContext<{
   convexClient: ConvexReactClient;
   convexQueryClient: ConvexQueryClient;
 }>()({
+  beforeLoad: async (ctx) => {
+    const auth = await fetchClerkAuth();
+    const { userId, token } = auth;
+
+    // During SSR only (the only time serverHttpClient exists),
+    // set the Clerk auth token to make HTTP queries with.
+    if (token) {
+      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
+    }
+
+    return {
+      userId,
+      token,
+    };
+  },
+  errorComponent: (props) => {
+    return (
+      <RootDocument>
+        <DefaultCatchBoundary {...props} />
+      </RootDocument>
+    );
+  },
+  notFoundComponent: () => <NotFound />,
+  component: RootComponent,
+
   head: () => ({
     meta: [
       {
@@ -70,30 +95,6 @@ export const Route = createRootRouteWithContext<{
       { rel: 'icon', href: '/favicon.ico' },
     ],
   }),
-  beforeLoad: async (ctx) => {
-    const auth = await fetchClerkAuth();
-    const { userId, token } = auth;
-
-    // During SSR only (the only time serverHttpClient exists),
-    // set the Clerk auth token to make HTTP queries with.
-    if (token) {
-      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
-    }
-
-    return {
-      userId,
-      token,
-    };
-  },
-  errorComponent: (props) => {
-    return (
-      <RootDocument>
-        <DefaultCatchBoundary {...props} />
-      </RootDocument>
-    );
-  },
-  notFoundComponent: () => <NotFound />,
-  component: RootComponent,
 });
 
 function RootComponent() {

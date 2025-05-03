@@ -1,9 +1,9 @@
-import { action, internalMutation, query } from './_generated/server'
-import { api, internal } from './_generated/api.js'
-import { v } from 'convex/values'
-import { WithoutSystemFields } from 'convex/server'
-import { Doc } from './_generated/dataModel'
-
+import { action, internalMutation, query } from './_generated/server';
+import { api, internal } from './_generated/api.js';
+import { v } from 'convex/values';
+import { WithoutSystemFields } from 'convex/server';
+import { Doc } from './_generated/dataModel';
+/* 
 export const get = query({
   args: {
     postId: v.string(),
@@ -61,4 +61,4 @@ export const populate = action(async (ctx) => {
       }),
     ),
   )
-})
+}) */
