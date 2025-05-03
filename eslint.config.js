@@ -6,7 +6,8 @@ import tseslint from 'typescript-eslint';
 export default tseslint.config(
     ...pluginRouter.configs['flat/recommended'],
     ...pluginQuery.configs['flat/recommended'],
-    pluginReact.configs['flat/recommended'],
+    pluginReact.configs.flat.recommended,
+    pluginReact.configs.flat['jsx-runtime'],
     tseslint.configs.recommended,
     {
         rules: {
