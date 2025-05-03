@@ -22,7 +22,7 @@ export default defineSchema({
     columnId: v.id('columns'),
     position: v.number(),
     estimate: v.optional(v.number()),
-    dueDate: v.optional(v.string()),
+    dueDate: v.optional(v.number()),
     description: v.optional(v.string()),
     createdBy: v.string(),
   }).index('by_column', ['columnId']),
@@ -33,7 +33,7 @@ export default defineSchema({
   }).index('by_workspace', ['workspaceId']),
   cardAssignments: defineTable({
     cardId: v.id('cards'),
-    userId: v.string(),
+    userId: v.id('users'),
   })
     .index('by_card', ['cardId'])
     .index('by_user', ['userId']),
@@ -59,12 +59,12 @@ export default defineSchema({
   }).index('by_card', ['cardId']),
   activityLog: defineTable({
     cardId: v.id('cards'),
-    userId: v.string(),
+    userId: v.id('users'),
     action: v.string(),
     details: v.optional(v.string()),
   }).index('by_card', ['cardId']),
   notifications: defineTable({
-    userId: v.string(),
+    userId: v.id('users'),
     type: v.string(),
     entityType: v.string(),
     entityId: v.string(),
@@ -74,4 +74,14 @@ export default defineSchema({
     .index('by_user', ['userId'])
     .index('by_user_read', ['userId', 'isRead'])
     .index('by_entity', ['entityType', 'entityId']),
+  users: defineTable({
+    clerkUser: v.any(), // this is UserJSON from @clerk/backend
+    color: v.string(),
+  }).index('by_clerk_id', ['clerkUser.id']),
+  userWorkspaces: defineTable({
+    workspaceId: v.id('workspaces'),
+    userId: v.id('users'),
+  })
+    .index('by_workspaceId', ['workspaceId'])
+    .index('by_userId', ['userId']),
 });

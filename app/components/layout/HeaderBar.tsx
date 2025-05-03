@@ -1,4 +1,10 @@
-import { SignedIn, UserButton } from '@clerk/tanstack-react-start';
+import {
+  SignedIn,
+  SignIn,
+  SignInButton,
+  UserButton,
+} from '@clerk/tanstack-react-start';
+import { Authenticated, Unauthenticated } from 'convex/react';
 import { SearchIcon, Settings, BellIcon } from 'lucide-react';
 
 export const HeaderBar = () => {
@@ -14,11 +20,15 @@ export const HeaderBar = () => {
       </label>
 
       <div className="flex items-center gap-x-6">
-        <SignedIn>
+        <Authenticated>
           <Settings className="size-6 cursor-pointer" />
           <BellIcon className="size-6 cursor-pointer" />
           <UserButton />
-        </SignedIn>
+        </Authenticated>
+
+        <Unauthenticated>
+          <SignInButton />
+        </Unauthenticated>
       </div>
     </div>
   );
