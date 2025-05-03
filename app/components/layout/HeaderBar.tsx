@@ -1,9 +1,4 @@
-import {
-  SignedIn,
-  SignIn,
-  SignInButton,
-  UserButton,
-} from '@clerk/tanstack-react-start';
+import { SignInButton, UserButton } from '@clerk/tanstack-react-start';
 import { Authenticated, Unauthenticated } from 'convex/react';
 import { SearchIcon, Settings, BellIcon } from 'lucide-react';
 

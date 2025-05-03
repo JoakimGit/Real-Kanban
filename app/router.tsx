@@ -27,7 +27,6 @@ export function createRouter() {
   });
   convexQueryClient.connect(queryClient);
 
-  // @snippet start example
   const router = routerWithQueryClient(
     createTanStackRouter({
       routeTree,
@@ -45,7 +44,6 @@ export function createRouter() {
     }),
     queryClient,
   );
-  // @snippet end example
 
   return router;
 }
