@@ -20,6 +20,11 @@
     "@clerk/backend": "^1.31.2",
     "@clerk/tanstack-react-start": "^0.14.3",
     "@convex-dev/react-query": "0.0.0-alpha.8",
+    "@radix-ui/react-collapsible": "^1.1.9",
+    "@radix-ui/react-dialog": "^1.1.12",
+    "@radix-ui/react-popover": "^1.1.11",
+    "@radix-ui/react-separator": "^1.1.5",
+    "@radix-ui/react-slot": "^1.2.0",
     "@tanstack/react-query": "^5.75.0",
     "@tanstack/react-router": "^1.119.0",
     "@tanstack/react-router-devtools": "^1.119.1",
@@ -33,6 +38,7 @@
     "redaxios": "^0.5.1",
     "svix": "^1.64.1",
     "tailwind-merge": "^2.6.0",
+    "tailwindcss-animate": "^1.0.7",
     "vinxi": "0.5.6"
   },
   "devDependencies": {
