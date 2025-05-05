@@ -2,7 +2,7 @@ Task Management App with real-time kanban
 
 Step 1
 
-- [] setup clerk webhook for adding user to our own convex db
+- [x] setup clerk webhook for adding user to our own convex db
 - [] create mutations for inserting db entities
 - [] update ui with buttons to call mutations
 - [] replace hardcoded sidebar with real data

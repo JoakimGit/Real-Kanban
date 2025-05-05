@@ -114,6 +114,6 @@ async function getCurrentUser(ctx: QueryCtx): Promise<Doc<'users'> | null> {
 
 export async function mustGetCurrentUser(ctx: QueryCtx): Promise<Doc<'users'>> {
   const userRecord = await getCurrentUser(ctx);
-  if (!userRecord) throw new Error("Can't get current user");
+  if (!userRecord) throw new Error('Not authenticated');
   return userRecord;
 }
