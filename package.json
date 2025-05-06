@@ -14,7 +14,8 @@
     "lint": "eslint --ext .ts,.tsx ./app",
     "prettier:check": "prettier --check ./app/**/* --ignore-unknown",
     "prettier:format": "prettier --write ./app/**/* --ignore-unknown",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "check-all": "pnpm prettier:check && pnpm lint && pnpm typecheck"
   },
   "dependencies": {
     "@clerk/backend": "^1.31.2",
