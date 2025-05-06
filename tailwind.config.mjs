@@ -3,6 +3,7 @@ import twAnimatePlugin from 'tailwindcss-animate';
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: ['./app/**/*.{js,ts,jsx,tsx}'],
+  darkMode: 'selector',
   theme: {
     extend: {
       colors: {

@@ -20,7 +20,9 @@ import appCss from '~/styles/app.css?url';
 import { ConvexReactClient } from 'convex/react';
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
 import { HeaderBar } from '~/components/layout/HeaderBar';
-import { SideBar } from '../components/layout/SideBar';
+import { AppSidebar } from '~/components/layout/app-sidebar';
+import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
+import { ThemeProvider } from '~/components/theme-provider';
 
 const fetchClerkAuth = createServerFn().handler(async () => {
   const auth = await getAuth(getWebRequest());
@@ -47,10 +49,7 @@ export const Route = createRootRouteWithContext<{
       ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
     }
 
-    return {
-      userId,
-      token,
-    };
+    return { userId, token };
   },
   errorComponent: (props) => {
     return (
@@ -102,9 +101,11 @@ function RootComponent() {
   return (
     <ClerkProvider>
       <ConvexProviderWithClerk client={context.convexClient} useAuth={useAuth}>
-        <RootDocument>
-          <Outlet />
-        </RootDocument>
+        <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
+          <RootDocument>
+            <Outlet />
+          </RootDocument>
+        </ThemeProvider>
       </ConvexProviderWithClerk>
     </ClerkProvider>
   );
@@ -116,12 +117,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="min-h-screen">
-        <div className="grid grid-cols-[auto,1fr] h-full">
-          <SideBar />
-          <HeaderBar />
-        </div>
-        {children}
+      <body>
+        <SidebarProvider>
+          <AppSidebar />
+          <SidebarInset>
+            <HeaderBar />
+            <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+              {children}
+            </div>
+          </SidebarInset>
+        </SidebarProvider>
         <TanStackRouterDevtools position="bottom-right" />
         <Scripts />
       </body>

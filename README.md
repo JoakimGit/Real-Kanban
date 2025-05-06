@@ -26,4 +26,5 @@ Step 4
 
 Step 5
 
+- [x] dark mode?
 - [] overall ui polishing

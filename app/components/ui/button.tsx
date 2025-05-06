@@ -2,12 +2,12 @@ import React from 'react';
 import { Slot } from '@radix-ui/react-slot';
 import { cn } from '~/utils/cn';
 
-const variants = {
+const variantClasses = {
   default: 'bg-primary text-primary-foreground shadow hover:bg-primary/90',
   destructive:
     'bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90',
   outline:
-    'border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground',
+    'border border-input shadow-sm hover:bg-accent hover:text-accent-foreground',
   secondary:
     'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80',
   ghost: 'hover:bg-accent hover:text-accent-foreground',
@@ -23,7 +23,7 @@ const sizes = {
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: keyof typeof variants;
+  variant?: keyof typeof variantClasses;
   size?: keyof typeof sizes;
   asChild?: boolean;
 }
@@ -45,7 +45,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : 'button';
     return (
       <Comp
-        className={cn(baseClasses, variants[variant], sizes[size], className)}
+        className={cn(
+          baseClasses,
+          variantClasses[variant],
+          sizes[size],
+          className,
+        )}
         ref={ref}
         {...props}
       />
