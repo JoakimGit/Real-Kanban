@@ -3,29 +3,56 @@ import { useMutation } from '@tanstack/react-query';
 import { api } from 'convex/_generated/api';
 import { Id } from 'convex/_generated/dataModel';
 import { PlusIcon } from 'lucide-react';
+import { useState } from 'react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '~/components/ui/popover';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
 
 export const SideBar = () => {
-  const { mutate, isPending } = useMutation({
+  const [workspaceName, setWorkspaceName] = useState('');
+  const { mutate } = useMutation({
     mutationFn: useConvexMutation(api.workspaces.createWorkspace),
   });
 
   const { mutate: createBoard } = useMutation({
     mutationFn: useConvexMutation(api.board.createBoard),
   });
-  return (
-    <div className="w-60 bg-secondary border-r flex flex-col h-full">
-      <p className="flex items-center text-3xl p-4 mb-4 border-b h-20">
-        Real Kanban
-      </p>
 
-      <div className="flex flex-col gap-y-5 px-4">
-        <h2 className="flex items-center justify-between text-2xl">
+  return (
+    <div className="w-72 bg-white flex flex-col h-full rounded-tr-md rounded-br-md">
+      <p className="flex items-center text-3xl p-4 mb-4 h-20">Real Kanban</p>
+
+      <div className="flex flex-col gap-y-5 pl-4 pr-2">
+        <h2 className="flex items-center justify-between text-2xl leading-none">
           Workspaces
           <span>
-            <PlusIcon
-              className={`size-4 cursor-pointer ${isPending && 'animate-spin [animation-duration:1.5s]'}`}
-              onClick={() => mutate({ name: 'Development' })}
-            />
+            <Popover>
+              <PopoverTrigger asChild>
+                <PlusIcon className="size-4 cursor-pointer" />
+              </PopoverTrigger>
+              <PopoverContent
+                className="ml-5 space-y-4"
+                align="start"
+                side="right"
+              >
+                <h2 className="text-lg text-center">Add Workspace</h2>
+
+                <Input
+                  value={workspaceName}
+                  onChange={(e) => setWorkspaceName(e.target.value)}
+                  type="text"
+                  placeholder="Workspace name"
+                />
+
+                <Button onClick={() => mutate({ name: workspaceName })}>
+                  Create
+                </Button>
+              </PopoverContent>
+            </Popover>
           </span>
         </h2>
 

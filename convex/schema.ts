@@ -9,14 +9,14 @@ const boardsTable = defineTable({
   workspaceId: v.id('workspaces'),
   name: v.string(),
   color: v.optional(v.string()),
-}).index('by_workspace', ['workspaceId']);
+}).index('by_workspaceId', ['workspaceId']);
 
 const columnsTable = defineTable({
   boardId: v.id('boards'),
   name: v.string(),
   position: v.number(),
 })
-  .index('by_board', ['boardId'])
+  .index('by_boardId', ['boardId'])
   .index('by_board_position', ['boardId', 'position']);
 
 const cardsTable = defineTable({
@@ -27,27 +27,27 @@ const cardsTable = defineTable({
   dueDate: v.optional(v.number()),
   description: v.optional(v.string()),
   createdBy: v.string(),
-}).index('by_column', ['columnId']);
+}).index('by_columnId', ['columnId']);
 
 const labelsTable = defineTable({
   title: v.string(),
   color: v.string(),
   workspaceId: v.id('workspaces'),
-}).index('by_workspace', ['workspaceId']);
+}).index('by_workspaceId', ['workspaceId']);
 
 const cardAssignmentsTable = defineTable({
   cardId: v.id('cards'),
   userId: v.id('users'),
 })
-  .index('by_card', ['cardId'])
-  .index('by_user', ['userId']);
+  .index('by_cardId', ['cardId'])
+  .index('by_userId', ['userId']);
 
 const cardLabelsTable = defineTable({
   cardId: v.id('cards'),
   labelId: v.id('labels'),
 })
-  .index('by_card', ['cardId'])
-  .index('by_label', ['labelId']);
+  .index('by_cardId', ['cardId'])
+  .index('by_labelId', ['labelId']);
 
 const tasksTable = defineTable({
   cardId: v.id('cards'),
@@ -56,21 +56,21 @@ const tasksTable = defineTable({
   dueDate: v.optional(v.number()),
   position: v.number(),
 })
-  .index('by_card', ['cardId'])
+  .index('by_cardId', ['cardId'])
   .index('by_card_position', ['cardId', 'position']);
 
 const commentsTable = defineTable({
   cardId: v.id('cards'),
   text: v.string(),
   author: v.string(),
-}).index('by_card', ['cardId']);
+}).index('by_cardId', ['cardId']);
 
 const activityLogTable = defineTable({
   cardId: v.id('cards'),
   userId: v.id('users'),
   action: v.string(),
   details: v.optional(v.string()),
-}).index('by_card', ['cardId']);
+}).index('by_cardId', ['cardId']);
 
 const notificationsTable = defineTable({
   userId: v.id('users'),
@@ -80,16 +80,16 @@ const notificationsTable = defineTable({
   message: v.string(),
   isRead: v.boolean(),
 })
-  .index('by_user', ['userId'])
+  .index('by_userId', ['userId'])
   .index('by_user_read', ['userId', 'isRead'])
-  .index('by_entity', ['entityType', 'entityId']);
+  .index('by_entityId', ['entityType', 'entityId']);
 
 const usersTable = defineTable({
   clerkUser: v.any(), // this is UserJSON from @clerk/backend
   color: v.string(),
 }).index('by_clerk_id', ['clerkUser.id']);
 
-const ownerWorkspacesTable = defineTable({
+const userWorkspacesTable = defineTable({
   workspaceId: v.id('workspaces'),
   userId: v.id('users'),
 })
@@ -116,6 +116,6 @@ export default defineSchema({
   activityLog: activityLogTable,
   notifications: notificationsTable,
   users: usersTable,
-  userWorkspaces: ownerWorkspacesTable,
+  userWorkspaces: userWorkspacesTable,
   boardMembers: boardMembersTable,
 });
