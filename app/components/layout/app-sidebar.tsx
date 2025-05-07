@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useState } from 'react';
 import { ChevronRight, PlusIcon } from 'lucide-react';
 
 import {
@@ -29,163 +29,21 @@ import { Input } from '../ui/input';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query';
 import { api } from 'convex/_generated/api';
-
-// This is sample data.
-const data = {
-  navMain: [
-    {
-      title: 'Getting Started',
-      url: '#',
-      items: [
-        {
-          title: 'Installation',
-          url: '#',
-        },
-        {
-          title: 'Project Structure',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Building Your Application',
-      url: '#',
-      items: [
-        {
-          title: 'Routing',
-          url: '#',
-        },
-        {
-          title: 'Data Fetching',
-          url: '#',
-          isActive: true,
-        },
-        {
-          title: 'Rendering',
-          url: '#',
-        },
-        {
-          title: 'Caching',
-          url: '#',
-        },
-        {
-          title: 'Styling',
-          url: '#',
-        },
-        {
-          title: 'Optimizing',
-          url: '#',
-        },
-        {
-          title: 'Configuring',
-          url: '#',
-        },
-        {
-          title: 'Testing',
-          url: '#',
-        },
-        {
-          title: 'Authentication',
-          url: '#',
-        },
-        {
-          title: 'Deploying',
-          url: '#',
-        },
-        {
-          title: 'Upgrading',
-          url: '#',
-        },
-        {
-          title: 'Examples',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'API Reference',
-      url: '#',
-      items: [
-        {
-          title: 'Components',
-          url: '#',
-        },
-        {
-          title: 'File Conventions',
-          url: '#',
-        },
-        {
-          title: 'Functions',
-          url: '#',
-        },
-        {
-          title: 'next.config.js Options',
-          url: '#',
-        },
-        {
-          title: 'CLI',
-          url: '#',
-        },
-        {
-          title: 'Edge Runtime',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Architecture',
-      url: '#',
-      items: [
-        {
-          title: 'Accessibility',
-          url: '#',
-        },
-        {
-          title: 'Fast Refresh',
-          url: '#',
-        },
-        {
-          title: 'Next.js Compiler',
-          url: '#',
-        },
-        {
-          title: 'Supported Browsers',
-          url: '#',
-        },
-        {
-          title: 'Turbopack',
-          url: '#',
-        },
-      ],
-    },
-    {
-      title: 'Community',
-      url: '#',
-      items: [
-        {
-          title: 'Contribution Guide',
-          url: '#',
-        },
-      ],
-    },
-  ],
-};
+import { Link } from '@tanstack/react-router';
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const [workspaceName, setWorkspaceName] = React.useState('');
-  const { mutate } = useMutation({
-    mutationFn: useConvexMutation(api.workspaces.createWorkspace),
-  });
+  const [workspaceName, setWorkspaceName] = useState('');
+  const [boardName, setBoardName] = useState('');
 
-  /* const {} = useQuery({
-    queryKey: ['workspaces'],
-    queryFn: () => useConvexQuery(api.workspaces.getUserWorkspaces),
-  }); */
+  const wsMutation = useConvexMutation(api.workspaces.createWorkspace);
+  const { mutate: createWorkspace } = useMutation({ mutationFn: wsMutation });
 
-  const { data: workspaces } = useQuery(
-    convexQuery(api.workspaces.getUserWorkspaces, {}),
-  );
-  console.log({ workspaces });
+  const boardMutation = useConvexMutation(api.board.createBoard);
+  const { mutate: createBoard } = useMutation({ mutationFn: boardMutation });
+
+  const convexQ = convexQuery(api.workspaces.getUserWorkspaces, {});
+  const { data: workspaces } = useQuery(convexQ);
+
   return (
     <Sidebar {...props}>
       <SidebarHeader className="mb-6">
@@ -214,7 +72,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     placeholder="Workspace name"
                   />
 
-                  <Button onClick={() => mutate({ name: workspaceName })}>
+                  <Button
+                    onClick={() => createWorkspace({ name: workspaceName })}
+                  >
                     Create
                   </Button>
                 </PopoverContent>
@@ -222,28 +82,64 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </span>
           </SidebarGroupLabel>
           <SidebarMenu>
-            {data.navMain.map((item) => (
-              <Collapsible key={item.title} className="group/collapsible">
+            {workspaces?.map(({ workspace, boards }) => (
+              <Collapsible key={workspace._id} className="group/collapsible">
                 <SidebarMenuItem>
                   <CollapsibleTrigger asChild>
                     <SidebarMenuButton>
                       <ChevronRight className="transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />{' '}
-                      {item.title}
+                      {workspace.name}
                     </SidebarMenuButton>
                   </CollapsibleTrigger>
-                  {item.items?.length ? (
+                  {boards.length ? (
                     <CollapsibleContent>
                       <SidebarMenuSub>
-                        {item.items.map((item) => (
-                          <SidebarMenuSubItem key={item.title}>
-                            <SidebarMenuSubButton
-                              asChild
-                              isActive={item.isActive}
-                            >
-                              <a href={item.url}>{item.title}</a>
+                        {boards.map((board) => (
+                          <SidebarMenuSubItem key={board._id}>
+                            <SidebarMenuSubButton asChild>
+                              <Link
+                                to="/boards/$boardId"
+                                params={{ boardId: board._id }}
+                              >
+                                {board.name}
+                              </Link>
                             </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         ))}
+                        <SidebarMenuSubItem>
+                          <SidebarMenuSubButton asChild>
+                            <Popover>
+                              <PopoverTrigger>+ Add board</PopoverTrigger>
+                              <PopoverContent
+                                className="ml-5 space-y-4"
+                                align="start"
+                                side="right"
+                              >
+                                <h2 className="text-lg text-center">
+                                  Add Board
+                                </h2>
+
+                                <Input
+                                  value={boardName}
+                                  onChange={(e) => setBoardName(e.target.value)}
+                                  type="text"
+                                  placeholder="Board name"
+                                />
+
+                                <Button
+                                  onClick={() =>
+                                    createBoard({
+                                      name: boardName,
+                                      workspaceId: workspace._id,
+                                    })
+                                  }
+                                >
+                                  Create
+                                </Button>
+                              </PopoverContent>
+                            </Popover>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
                       </SidebarMenuSub>
                     </CollapsibleContent>
                   ) : null}

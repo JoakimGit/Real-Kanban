@@ -13,6 +13,7 @@
 import { Route as rootRoute } from './_routes/__root'
 import { Route as AuthedImport } from './_routes/_authed'
 import { Route as IndexImport } from './_routes/index'
+import { Route as AuthedBoardsBoardIdImport } from './_routes/_authed/boards.$boardId'
 
 // Create/Update Routes
 
@@ -25,6 +26,12 @@ const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRoute,
+} as any)
+
+const AuthedBoardsBoardIdRoute = AuthedBoardsBoardIdImport.update({
+  id: '/boards/$boardId',
+  path: '/boards/$boardId',
+  getParentRoute: () => AuthedRoute,
 } as any)
 
 // Populate the FileRoutesByPath interface
@@ -45,44 +52,65 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedImport
       parentRoute: typeof rootRoute
     }
+    '/_authed/boards/$boardId': {
+      id: '/_authed/boards/$boardId'
+      path: '/boards/$boardId'
+      fullPath: '/boards/$boardId'
+      preLoaderRoute: typeof AuthedBoardsBoardIdImport
+      parentRoute: typeof AuthedImport
+    }
   }
 }
 
 // Create and export the route tree
 
+interface AuthedRouteChildren {
+  AuthedBoardsBoardIdRoute: typeof AuthedBoardsBoardIdRoute
+}
+
+const AuthedRouteChildren: AuthedRouteChildren = {
+  AuthedBoardsBoardIdRoute: AuthedBoardsBoardIdRoute,
+}
+
+const AuthedRouteWithChildren =
+  AuthedRoute._addFileChildren(AuthedRouteChildren)
+
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '': typeof AuthedRoute
+  '': typeof AuthedRouteWithChildren
+  '/boards/$boardId': typeof AuthedBoardsBoardIdRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '': typeof AuthedRoute
+  '': typeof AuthedRouteWithChildren
+  '/boards/$boardId': typeof AuthedBoardsBoardIdRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/': typeof IndexRoute
-  '/_authed': typeof AuthedRoute
+  '/_authed': typeof AuthedRouteWithChildren
+  '/_authed/boards/$boardId': typeof AuthedBoardsBoardIdRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | ''
+  fullPaths: '/' | '' | '/boards/$boardId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | ''
-  id: '__root__' | '/' | '/_authed'
+  to: '/' | '' | '/boards/$boardId'
+  id: '__root__' | '/' | '/_authed' | '/_authed/boards/$boardId'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthedRoute: typeof AuthedRoute
+  AuthedRoute: typeof AuthedRouteWithChildren
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthedRoute: AuthedRoute,
+  AuthedRoute: AuthedRouteWithChildren,
 }
 
 export const routeTree = rootRoute
@@ -103,7 +131,14 @@ export const routeTree = rootRoute
       "filePath": "index.tsx"
     },
     "/_authed": {
-      "filePath": "_authed.tsx"
+      "filePath": "_authed.tsx",
+      "children": [
+        "/_authed/boards/$boardId"
+      ]
+    },
+    "/_authed/boards/$boardId": {
+      "filePath": "_authed/boards.$boardId.tsx",
+      "parent": "/_authed"
     }
   }
 }

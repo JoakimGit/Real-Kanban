@@ -19,7 +19,7 @@ import appCss from '~/styles/app.css?url';
 
 import { ConvexReactClient } from 'convex/react';
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
-import { HeaderBar } from '~/components/layout/HeaderBar';
+import { HeaderBar } from '~/components/layout/header-bar';
 import { AppSidebar } from '~/components/layout/app-sidebar';
 import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
 import { ThemeProvider } from '~/components/theme-provider';
