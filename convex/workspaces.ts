@@ -28,7 +28,9 @@ export const getUserWorkspaces = query({
 
     const userOwnedWorkspaces = await ctx.db
       .query('userWorkspaces')
-      .withIndex('by_userId', (q) => q.eq('userId', currentUser._id))
+      .withIndex('by_userId_workspaceId', (q) =>
+        q.eq('userId', currentUser._id),
+      )
       .collect();
 
     const workspaceIds = userOwnedWorkspaces.map((ws) => ws.workspaceId);

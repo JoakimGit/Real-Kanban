@@ -92,9 +92,7 @@ const usersTable = defineTable({
 const userWorkspacesTable = defineTable({
   workspaceId: v.id('workspaces'),
   userId: v.id('users'),
-})
-  .index('by_workspaceId', ['workspaceId'])
-  .index('by_userId', ['userId']);
+}).index('by_userId_workspaceId', ['userId', 'workspaceId']);
 
 const boardMembersTable = defineTable({
   boardId: v.id('boards'),
