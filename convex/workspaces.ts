@@ -1,8 +1,9 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
-import { mustGetCurrentUser } from './users';
+import { mustGetCurrentUser } from './model/user';
 import { getManyFrom, getManyVia } from 'convex-helpers/server/relationships';
 import { Doc } from './_generated/dataModel';
+import { ensureIsWorkspaceOwner } from './model/workspace';
 
 export const createWorkspace = mutation({
   args: {
@@ -19,6 +20,17 @@ export const createWorkspace = mutation({
     });
 
     return workspaceId;
+  },
+});
+
+export const updateWorkspace = mutation({
+  args: {
+    workspaceId: v.id('workspaces'),
+    name: v.string(),
+  },
+  handler: async (ctx, { workspaceId, name }) => {
+    await ensureIsWorkspaceOwner(ctx, workspaceId);
+    await ctx.db.patch(workspaceId, { name });
   },
 });
 
