@@ -13,11 +13,10 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
-import type * as board from "../board.js";
+import type * as boards from "../boards.js";
 import type * as http from "../http.js";
 import type * as model_user from "../model/user.js";
 import type * as model_workspace from "../model/workspace.js";
-import type * as posts from "../posts.js";
 import type * as users from "../users.js";
 import type * as workspaces from "../workspaces.js";
 
@@ -30,11 +29,10 @@ import type * as workspaces from "../workspaces.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
-  board: typeof board;
+  boards: typeof boards;
   http: typeof http;
   "model/user": typeof model_user;
   "model/workspace": typeof model_workspace;
-  posts: typeof posts;
   users: typeof users;
   workspaces: typeof workspaces;
 }>;

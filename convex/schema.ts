@@ -3,6 +3,8 @@ import { v } from 'convex/values';
 
 const workspacesTable = defineTable({
   name: v.string(),
+  description: v.optional(v.string()),
+  color: v.optional(v.string()),
 });
 
 const boardsTable = defineTable({
