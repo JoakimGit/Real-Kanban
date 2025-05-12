@@ -1,5 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
 import { SignIn } from '@clerk/tanstack-react-start';
+import { AppSidebar } from '~/components/layout/app-sidebar';
+import { HeaderBar } from '~/components/layout/header-bar';
+import { SidebarProvider, SidebarInset } from '~/components/ui/sidebar';
 
 export const Route = createFileRoute('/_authed')({
   beforeLoad: ({ context }) => {
@@ -18,4 +21,19 @@ export const Route = createFileRoute('/_authed')({
 
     throw error;
   },
+  component: ProtectedLayout,
 });
+
+function ProtectedLayout() {
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <HeaderBar />
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <Outlet />
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
