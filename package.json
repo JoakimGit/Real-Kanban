@@ -9,7 +9,7 @@
     "dev": "concurrently -r pnpm:dev:web pnpm:dev:db",
     "dev:web": "vinxi dev",
     "dev:db": "npx convex dev",
-    "build": "vinxi build 2>/dev/null & true 'Ignore vinxi build warnings until tanstack start can run without them (need updated guide)'",
+    "build": "vinxi build",
     "start": "vinxi start",
     "lint": "eslint --ext .ts,.tsx ./app",
     "prettier:check": "prettier --check ./app/**/* --ignore-unknown",

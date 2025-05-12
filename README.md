@@ -3,8 +3,11 @@ Task Management App with real-time kanban
 Step 1
 
 - [x] setup clerk webhook for adding user to our own convex db
+- [x] dark mode?
 - [] create mutations for inserting db entities
 - [] update ui with buttons to call mutations
+- [] create list view for workspaces and boards
+- [] create board view with columns/cards
 - [x] replace hardcoded sidebar with real data
 
 Step 2
@@ -26,5 +29,6 @@ Step 4
 
 Step 5
 
-- [x] dark mode?
+- [] better error handling?
+- [] logging?
 - [] overall ui polishing
