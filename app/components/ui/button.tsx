@@ -12,6 +12,7 @@ const variantClasses = {
     'bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80',
   ghost: 'hover:bg-accent hover:text-accent-foreground',
   link: 'text-primary underline-offset-4 hover:underline',
+  accent: 'bg-accent text-accent-foreground shadow-sm hover:bg-accent/80',
 };
 
 const sizes = {

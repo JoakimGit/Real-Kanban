@@ -21,15 +21,15 @@ export const ThemeToggle = () => {
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme('light')}>
-          Light
+      <DropdownMenuContent className="*:w-full *:cursor-pointer" align="end">
+        <DropdownMenuItem asChild>
+          <button onClick={() => setTheme('light')}>Light</button>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme('dark')}>
-          Dark
+        <DropdownMenuItem asChild>
+          <button onClick={() => setTheme('dark')}>Dark</button>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme('system')}>
-          System
+        <DropdownMenuItem asChild>
+          <button onClick={() => setTheme('system')}>System</button>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
