@@ -8,11 +8,13 @@ import { ensureIsWorkspaceOwner } from './model/workspace';
 export const createWorkspace = mutation({
   args: {
     name: v.string(),
+    description: v.optional(v.string()),
+    color: v.optional(v.string()),
   },
-  handler: async (ctx, { name }) => {
+  handler: async (ctx, workspace) => {
     const currentUser = await mustGetCurrentUser(ctx);
 
-    const workspaceId = await ctx.db.insert('workspaces', { name });
+    const workspaceId = await ctx.db.insert('workspaces', workspace);
 
     await ctx.db.insert('userWorkspaces', {
       userId: currentUser._id,
@@ -27,10 +29,12 @@ export const updateWorkspace = mutation({
   args: {
     workspaceId: v.id('workspaces'),
     name: v.string(),
+    description: v.optional(v.string()),
+    color: v.optional(v.string()),
   },
-  handler: async (ctx, { workspaceId, name }) => {
+  handler: async (ctx, { workspaceId, ...updatedWs }) => {
     await ensureIsWorkspaceOwner(ctx, workspaceId);
-    await ctx.db.patch(workspaceId, { name });
+    await ctx.db.patch(workspaceId, updatedWs);
   },
 });
 

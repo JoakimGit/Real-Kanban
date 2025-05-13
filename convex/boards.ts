@@ -10,6 +10,7 @@ export const createBoard = mutation({
   args: {
     workspaceId: v.id('workspaces'),
     name: v.string(),
+    description: v.optional(v.string()),
     color: v.optional(v.string()),
   },
   handler: async (ctx, boardData) => {
@@ -56,10 +57,11 @@ export const updateBoard = mutation({
   args: {
     boardId: v.id('boards'),
     name: v.string(),
+    description: v.optional(v.string()),
     color: v.optional(v.string()),
   },
-  handler: async (ctx, { boardId, name, color }) => {
+  handler: async (ctx, { boardId, ...updatedBoard }) => {
     await ensureIsBoardWorkspaceOwner(ctx, boardId);
-    await ctx.db.patch(boardId, { name, color });
+    await ctx.db.patch(boardId, { ...updatedBoard });
   },
 });
