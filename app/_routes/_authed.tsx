@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router';
 import { SignIn } from '@clerk/tanstack-react-start';
-import { AppSidebar } from '~/components/layout/app-sidebar';
+import { AppSidebar } from '~/components/layout/sidebar/app-sidebar';
 import { HeaderBar } from '~/components/layout/header-bar';
 import { SidebarProvider, SidebarInset } from '~/components/ui/sidebar';
 
