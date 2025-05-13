@@ -41,6 +41,7 @@
     "svix": "^1.64.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "valibot": "^1.1.0",
     "vinxi": "0.5.6"
   },
   "devDependencies": {

@@ -1,17 +1,24 @@
-import { convexQuery } from '@convex-dev/react-query';
-import { useQuery } from '@tanstack/react-query';
+import { convexQuery, useConvexMutation } from '@convex-dev/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { api } from 'convex/_generated/api';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, PlusIcon } from 'lucide-react';
+import { BoardWorkspaceForm } from '~/components/layout/sidebar/BoardWorkspaceForm';
 import { Button } from '~/components/ui/button';
 import {
   Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
 } from '~/components/ui/card';
+import {
+  Popover,
+  PopoverClose,
+  PopoverContent,
+  PopoverTrigger,
+} from '~/components/ui/popover';
 
 export const Route = createFileRoute('/_authed/workspaces/$workspaceId')({
   component: RouteComponent,
@@ -20,14 +27,20 @@ export const Route = createFileRoute('/_authed/workspaces/$workspaceId')({
 function RouteComponent() {
   const navigate = useNavigate();
   const { workspaceId } = Route.useParams();
+
   const { data: workspaceModel } = useQuery({
     ...convexQuery(api.workspaces.getUserWorkspaces, {}),
     select: (workspaces) =>
       workspaces.find((ws) => ws.workspace._id === workspaceId),
   });
-  const { workspace, boards } = workspaceModel || {};
+
+  const { mutate: createBoard } = useMutation({
+    mutationFn: useConvexMutation(api.boards.createBoard),
+  });
 
   const goBack = () => navigate({ to: '/' });
+
+  const { workspace, boards } = workspaceModel || {};
   if (!workspace) {
     return (
       <div className="flex flex-col items-center justify-center h-[50vh]">
@@ -54,34 +67,47 @@ function RouteComponent() {
             Select a board to view its tasks
           </p>
         </div>
-        <Button className="ml-auto">
-          <Plus className="mr-2 h-4 w-4" />
-          New Board
-        </Button>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button className="ml-auto" variant="accent">
+              <PlusIcon className="mr-2 h-4 w-4" />
+              New Board
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="ml-5 space-y-4" align="start" side="left">
+            <h2 className="text-lg text-center">Add Workspace</h2>
+
+            <BoardWorkspaceForm
+              onSubmit={(formData) =>
+                createBoard({ workspaceId: workspace._id, ...formData })
+              }
+            >
+              <PopoverClose asChild>
+                <Button type="submit">Create</Button>
+              </PopoverClose>
+            </BoardWorkspaceForm>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {boards?.map((board) => (
           <Card
             key={board._id}
-            className="cursor-pointer transition-all hover:shadow-md"
+            className="flex flex-col cursor-pointer transition-all hover:shadow-md"
           >
             <CardHeader className="pb-2">
-              <div
-                className={`w-12 h-1.5 rounded-full mb-2 ${board.color ?? 'bg-green-400'}`}
-              />
+              <div className={`w-12 h-1.5 rounded-full mb-2 ${board.color}`} />
               <CardTitle>{board.name}</CardTitle>
               <CardDescription>{board.description}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="text-sm text-muted-foreground">
-                <p>23 cards</p>
-              </div>
+            <CardContent className="text-sm text-muted-foreground grow">
+              <p>23 cards</p> {/* TODO - get cards count */}
             </CardContent>
             <CardFooter className="border-t pt-4">
               <div className="flex items-center text-sm text-muted-foreground">
-                {/*  <span>{workspace.members} members</span> */}
-                <span>12 members</span>
+                <span>12 members</span> {/* TODO - get actual members */}
               </div>
             </CardFooter>
           </Card>

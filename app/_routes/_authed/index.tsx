@@ -1,17 +1,24 @@
-import { convexQuery } from '@convex-dev/react-query';
-import { useQuery } from '@tanstack/react-query';
+import { convexQuery, useConvexMutation } from '@convex-dev/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { api } from 'convex/_generated/api';
 import { PlusIcon } from 'lucide-react';
+import { BoardWorkspaceForm } from '~/components/layout/sidebar/BoardWorkspaceForm';
 import { Button } from '~/components/ui/button';
 import {
   Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
 } from '~/components/ui/card';
+import {
+  Popover,
+  PopoverClose,
+  PopoverContent,
+  PopoverTrigger,
+} from '~/components/ui/popover';
 
 export const Route = createFileRoute('/_authed/')({
   component: Home,
@@ -22,6 +29,10 @@ function Home() {
     convexQuery(api.workspaces.getUserWorkspaces, {}),
   );
 
+  const { mutate: createWorkspace } = useMutation({
+    mutationFn: useConvexMutation(api.workspaces.createWorkspace),
+  });
+
   return (
     <div className="space-y-6 py-8 px-4">
       <div className="flex items-center justify-between">
@@ -31,10 +42,26 @@ function Home() {
             Select a workspace to view its boards
           </p>
         </div>
-        <Button variant="accent">
-          <PlusIcon className="mr-2 h-4 w-4" />
-          New Workspace
-        </Button>
+
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="accent">
+              <PlusIcon className="mr-2 h-4 w-4" />
+              New Workspace
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="ml-5 space-y-4" align="start" side="left">
+            <h2 className="text-lg text-center">Add Workspace</h2>
+
+            <BoardWorkspaceForm
+              onSubmit={(formData) => createWorkspace(formData)}
+            >
+              <PopoverClose asChild>
+                <Button type="submit">Create</Button>
+              </PopoverClose>
+            </BoardWorkspaceForm>
+          </PopoverContent>
+        </Popover>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -44,23 +71,20 @@ function Home() {
             params={{ workspaceId: workspace._id }}
             key={workspace._id}
           >
-            <Card className="cursor-pointer transition-all hover:shadow-md">
+            <Card className="flex flex-col cursor-pointer transition-all hover:shadow-md">
               <CardHeader className="pb-2">
                 <div
-                  className={`w-12 h-1.5 rounded-full mb-2 ${workspace.color ?? 'bg-slate-400'}`}
+                  className={`w-12 h-1.5 rounded-full mb-2 ${workspace.color}`}
                 />
                 <CardTitle>{workspace.name}</CardTitle>
                 <CardDescription>{workspace.description}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="text-sm text-muted-foreground">
-                  <p>{boards.length} boards</p>
-                </div>
+              <CardContent className="text-sm text-muted-foreground grow">
+                <p>{boards.length} boards</p>
               </CardContent>
               <CardFooter className="border-t pt-4">
                 <div className="flex items-center text-sm text-muted-foreground">
-                  {/*  <span>{workspace.members} members</span> */}
-                  <span>7 members</span>
+                  <span>7 members</span> {/* TODO - get actual members */}
                 </div>
               </CardFooter>
             </Card>
