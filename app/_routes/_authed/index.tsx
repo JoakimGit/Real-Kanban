@@ -23,10 +23,10 @@ function Home() {
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between lg:pr-4">
+    <div className="space-y-6 py-8 px-4">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Workspaces</h1>
+          <h1 className="text-3xl font-bold tracking-normal">Workspaces</h1>
           <p className="text-muted-foreground">
             Select a workspace to view its boards
           </p>
@@ -47,9 +47,9 @@ function Home() {
             <Card className="cursor-pointer transition-all hover:shadow-md">
               <CardHeader className="pb-2">
                 <div
-                  className={`w-12 h-1.5 rounded-full mb-2 ${workspace.color}`}
+                  className={`w-12 h-1.5 rounded-full mb-2 ${workspace.color ?? 'bg-slate-400'}`}
                 />
-                <CardTitle className="text-lg">{workspace.name}</CardTitle>
+                <CardTitle>{workspace.name}</CardTitle>
                 <CardDescription>{workspace.description}</CardDescription>
               </CardHeader>
               <CardContent>

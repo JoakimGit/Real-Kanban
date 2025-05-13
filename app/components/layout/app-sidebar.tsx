@@ -131,7 +131,7 @@ const AppSidebarGroup = ({
             >
               <SidebarMenuSubButton asChild>
                 <Link
-                  className="text-foreground/70"
+                  className="w-full text-foreground/70"
                   to="/boards/$boardId"
                   params={{ boardId: board._id }}
                 >

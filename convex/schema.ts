@@ -10,6 +10,7 @@ const workspacesTable = defineTable({
 const boardsTable = defineTable({
   workspaceId: v.id('workspaces'),
   name: v.string(),
+  description: v.optional(v.string()),
   color: v.optional(v.string()),
 }).index('by_workspaceId', ['workspaceId']);
 
