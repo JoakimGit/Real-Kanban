@@ -16,8 +16,8 @@
 - [x] update sidebar ui with buttons to call mutations
 - [x] create query for real data and replace hardcoded sidebar
 - [x] create list view for workspaces and boards
-- [ ] add description and color to workspace/board create/update
-- [ ] reuse create workspace/board functionality for create button in list views
+- [x] add description and color to workspace/board create/update
+- [x] reuse create workspace/board functionality for create button in list views
 
 3. Board columns and cards
 
