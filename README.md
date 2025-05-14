@@ -19,25 +19,25 @@
 - [x] add description and color to workspace/board create/update
 - [x] reuse create workspace/board functionality for create button in list views
 
-3. Board columns and cards
+3. Board columns and tasks
 
-- [ ] create board view with columns/cards
-- [ ] modal for updating card with all its properties, including tasks
+- [ ] create board view with columns/tasks
+- [ ] modal for updating task with all its properties, including checklist items
 - [ ] implement drag & drop
-- [ ] implement conflict resolution for 2 users updating same entity
+- [ ] various actions (minimize task properties, copy task, move task, create col/task/checklistitem, deletes, etc.)
 
 4. Secondary features
 
+- [ ] settings pages for user/workspace/others
 - [ ] add user management (inviting users to workspace/board, role/authorization stuff)
-- [ ] various actions (minimize card fields, copy card, delete for all entities, etc.)
-- [ ] add card comments
+- [ ] add task comments
 
 5. Bonus features
 
 - [ ] add notifications
-- [ ] add activity log to cards
-- [ ] add file upload for card attachments
-- [ ] settings pages for user/workspace/others?
+- [ ] add activity log to tasks
+- [ ] add file upload for task attachments
+- [ ] conflict resolution for 2 users updating same entity (automatic + manual)
 
 6. Polish
 

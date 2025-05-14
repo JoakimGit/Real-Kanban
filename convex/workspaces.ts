@@ -56,8 +56,9 @@ export const getUserWorkspaces = query({
       ctx.db,
       'boardMembers',
       'boardId',
-      'by_userId',
+      'by_userId_boardId',
       currentUser._id,
+      'userId',
     );
 
     userBoards.forEach((board) =>

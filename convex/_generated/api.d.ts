@@ -14,9 +14,12 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as boards from "../boards.js";
+import type * as columns from "../columns.js";
 import type * as http from "../http.js";
+import type * as model_board from "../model/board.js";
 import type * as model_user from "../model/user.js";
 import type * as model_workspace from "../model/workspace.js";
+import type * as tasks from "../tasks.js";
 import type * as users from "../users.js";
 import type * as workspaces from "../workspaces.js";
 
@@ -30,9 +33,12 @@ import type * as workspaces from "../workspaces.js";
  */
 declare const fullApi: ApiFromModules<{
   boards: typeof boards;
+  columns: typeof columns;
   http: typeof http;
+  "model/board": typeof model_board;
   "model/user": typeof model_user;
   "model/workspace": typeof model_workspace;
+  tasks: typeof tasks;
   users: typeof users;
   workspaces: typeof workspaces;
 }>;
