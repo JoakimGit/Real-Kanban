@@ -21,6 +21,9 @@
     "@clerk/backend": "^1.31.2",
     "@clerk/tanstack-react-start": "^0.14.3",
     "@convex-dev/react-query": "0.0.0-alpha.8",
+    "@dnd-kit/abstract": "^0.1.12",
+    "@dnd-kit/helpers": "^0.1.12",
+    "@dnd-kit/react": "^0.1.12",
     "@radix-ui/react-collapsible": "^1.1.9",
     "@radix-ui/react-dialog": "^1.1.12",
     "@radix-ui/react-dropdown-menu": "^2.1.14",
@@ -47,6 +50,7 @@
   "devDependencies": {
     "@tanstack/eslint-plugin-query": "^5.74.7",
     "@tanstack/eslint-plugin-router": "^1.115.0",
+    "@total-typescript/ts-reset": "^0.6.1",
     "@types/node": "^22.15.3",
     "@types/react": "^18.3.20",
     "@types/react-dom": "^18.3.7",
