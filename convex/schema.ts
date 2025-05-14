@@ -17,63 +17,58 @@ const boardsTable = defineTable({
 const columnsTable = defineTable({
   boardId: v.id('boards'),
   name: v.string(),
-  position: v.number(),
+  position: v.float64(),
 })
   .index('by_boardId', ['boardId'])
   .index('by_board_position', ['boardId', 'position']);
 
-const cardsTable = defineTable({
-  title: v.string(),
+const tasksTable = defineTable({
+  name: v.string(),
   columnId: v.id('columns'),
-  position: v.number(),
+  position: v.float64(),
+  priority: v.optional(
+    v.union(v.literal('Low'), v.literal('Medium'), v.literal('High')),
+  ),
   estimate: v.optional(v.number()),
   dueDate: v.optional(v.number()),
   description: v.optional(v.string()),
+  assignedTo: v.optional(v.id('users')),
   createdBy: v.string(),
 }).index('by_columnId', ['columnId']);
 
 const labelsTable = defineTable({
-  title: v.string(),
+  name: v.string(),
   color: v.string(),
   workspaceId: v.id('workspaces'),
 }).index('by_workspaceId', ['workspaceId']);
 
-const cardAssignmentsTable = defineTable({
-  cardId: v.id('cards'),
-  userId: v.id('users'),
-})
-  .index('by_cardId', ['cardId'])
-  .index('by_userId', ['userId']);
-
-const cardLabelsTable = defineTable({
-  cardId: v.id('cards'),
+const taskLabelsTable = defineTable({
+  taskId: v.id('tasks'),
   labelId: v.id('labels'),
 })
-  .index('by_cardId', ['cardId'])
+  .index('by_taskId', ['taskId'])
   .index('by_labelId', ['labelId']);
 
-const tasksTable = defineTable({
-  cardId: v.id('cards'),
-  title: v.string(),
+const checklistItemsTable = defineTable({
+  taskId: v.id('tasks'),
+  name: v.string(),
   isComplete: v.boolean(),
   dueDate: v.optional(v.number()),
-  position: v.number(),
-})
-  .index('by_cardId', ['cardId'])
-  .index('by_card_position', ['cardId', 'position']);
+  position: v.float64(),
+}).index('by_taskId_position', ['taskId', 'position']);
 
 const commentsTable = defineTable({
-  cardId: v.id('cards'),
+  taskId: v.id('tasks'),
   text: v.string(),
   author: v.string(),
-}).index('by_cardId', ['cardId']);
+}).index('by_taskId', ['taskId']);
 
 const activityLogTable = defineTable({
-  cardId: v.id('cards'),
+  taskId: v.id('tasks'),
   userId: v.id('users'),
   action: v.string(),
   details: v.optional(v.string()),
-}).index('by_cardId', ['cardId']);
+}).index('by_taskId', ['taskId']);
 
 const notificationsTable = defineTable({
   userId: v.id('users'),
@@ -102,17 +97,16 @@ const boardMembersTable = defineTable({
   userId: v.id('users'),
 })
   .index('by_boardId', ['boardId'])
-  .index('by_userId', ['userId']);
+  .index('by_userId_boardId', ['userId', 'boardId']);
 
 export default defineSchema({
   workspaces: workspacesTable,
   boards: boardsTable,
   columns: columnsTable,
-  cards: cardsTable,
-  labels: labelsTable,
-  cardAssignments: cardAssignmentsTable,
-  cardLabels: cardLabelsTable,
   tasks: tasksTable,
+  labels: labelsTable,
+  taskLabels: taskLabelsTable,
+  checklistItems: checklistItemsTable,
   comments: commentsTable,
   activityLog: activityLogTable,
   notifications: notificationsTable,

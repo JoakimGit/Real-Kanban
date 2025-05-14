@@ -1,10 +1,11 @@
 import { v } from 'convex/values';
-import { mutation } from './_generated/server';
-import { mustGetCurrentUser } from './model/user';
+import { mutation, query } from './_generated/server';
+import { mustGetCurrentUser, User } from './model/user';
 import {
   ensureIsBoardWorkspaceOwner,
   ensureIsWorkspaceOwner,
 } from './model/workspace';
+import { getManyVia } from 'convex-helpers/server/relationships';
 
 export const createBoard = mutation({
   args: {
@@ -63,5 +64,75 @@ export const updateBoard = mutation({
   handler: async (ctx, { boardId, ...updatedBoard }) => {
     await ensureIsBoardWorkspaceOwner(ctx, boardId);
     await ctx.db.patch(boardId, { ...updatedBoard });
+  },
+});
+
+export const getBoardWithColumnsAndTasks = query({
+  args: {
+    boardId: v.id('boards'),
+  },
+  handler: async (ctx, { boardId }) => {
+    const board = await ctx.db.get(boardId);
+
+    if (!board) {
+      return null;
+    }
+
+    // Fetch columns for the board, ordered by position
+    const columns = await ctx.db
+      .query('columns')
+      .withIndex('by_board_position', (q) => q.eq('boardId', boardId))
+      .collect();
+
+    // Fetch tasks and related data for each column
+    const columnsWithTasks = await Promise.all(
+      columns.map(async (column) => {
+        const tasksForColumn = await ctx.db
+          .query('tasks')
+          .withIndex('by_columnId', (q) => q.eq('columnId', column._id))
+          .collect();
+
+        // Fetch related data for tasks in parallel
+        const tasksWithDetails = await Promise.all(
+          tasksForColumn.map(async (task) => {
+            const [assignedTo, labels, checklistItems] = await Promise.all([
+              (task.assignedTo
+                ? ctx.db.get(task.assignedTo)
+                : null) as User | null,
+              getManyVia(
+                ctx.db,
+                'taskLabels',
+                'labelId',
+                'by_taskId',
+                task._id,
+              ),
+              ctx.db
+                .query('checklistItems')
+                .withIndex('by_taskId_position', (q) =>
+                  q.eq('taskId', task._id),
+                )
+                .collect(),
+            ]);
+
+            return {
+              ...task,
+              assignedTo,
+              labels: labels.filter(Boolean),
+              checklistItems,
+            };
+          }),
+        );
+
+        return {
+          ...column,
+          tasks: tasksWithDetails,
+        };
+      }),
+    );
+
+    return {
+      ...board,
+      columns: columnsWithTasks,
+    };
   },
 });
