@@ -103,8 +103,9 @@ export const getBoardWithColumnsAndTasks = query({
                 ctx.db,
                 'taskLabels',
                 'labelId',
-                'by_taskId',
+                'by_taskId_labelId',
                 task._id,
+                'taskId',
               ),
               ctx.db
                 .query('checklistItems')
