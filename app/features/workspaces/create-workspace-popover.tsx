@@ -2,7 +2,7 @@ import { useConvexMutation } from '@convex-dev/react-query';
 import { useMutation } from '@tanstack/react-query';
 import { api } from 'convex/_generated/api';
 import { PlusIcon } from 'lucide-react';
-import { BoardWorkspaceForm } from '~/components/layout/sidebar/BoardWorkspaceForm';
+import { BoardWorkspaceForm } from '~/components/layout/sidebar/board-workspace-form';
 import { Button } from '~/components/ui/button';
 import {
   Popover,
