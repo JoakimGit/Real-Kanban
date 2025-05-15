@@ -27,7 +27,12 @@ const tasksTable = defineTable({
   columnId: v.id('columns'),
   position: v.float64(),
   priority: v.optional(
-    v.union(v.literal('Low'), v.literal('Medium'), v.literal('High')),
+    v.union(
+      v.literal('low'),
+      v.literal('medium'),
+      v.literal('high'),
+      v.literal('critical'),
+    ),
   ),
   estimate: v.optional(v.number()),
   dueDate: v.optional(v.number()),
@@ -45,9 +50,7 @@ const labelsTable = defineTable({
 const taskLabelsTable = defineTable({
   taskId: v.id('tasks'),
   labelId: v.id('labels'),
-})
-  .index('by_taskId', ['taskId'])
-  .index('by_labelId', ['labelId']);
+}).index('by_taskId_labelId', ['taskId', 'labelId']);
 
 const checklistItemsTable = defineTable({
   taskId: v.id('tasks'),

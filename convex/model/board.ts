@@ -5,9 +5,30 @@ import { mustGetCurrentUser } from './user';
 
 export const ensureIsBoardMember = async (
   ctx: QueryCtx | MutationCtx,
-  boardId: Id<'boards'>,
+  config: {
+    fromBoardId?: Id<'boards'>;
+    fromColumnId?: Id<'columns'>;
+    fromTaskId?: Id<'tasks'>;
+  },
 ) => {
   const currentUser = await mustGetCurrentUser(ctx);
+  let boardId: Id<'boards'> | undefined = config.fromBoardId;
+
+  if (config.fromColumnId) {
+    const column = await ctx.db.get(config.fromColumnId);
+    boardId = column?.boardId;
+  } else if (config.fromTaskId) {
+    const task = await ctx.db.get(config.fromTaskId);
+
+    if (task) {
+      const column = await ctx.db.get(task?.columnId);
+      boardId = column?.boardId;
+    }
+  }
+
+  if (!boardId) {
+    throw new ConvexError('Board not found');
+  }
 
   const boardFound = await ctx.db
     .query('boardMembers')
