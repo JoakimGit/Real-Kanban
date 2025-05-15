@@ -12,4 +12,7 @@ export default defineConfig({
   tsr: {
     routesDirectory: './app/_routes',
   },
+  server: {
+    preset: 'netlify',
+  },
 });
