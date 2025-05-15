@@ -18,7 +18,7 @@ import {
 } from '~/components/ui/dropdown-menu';
 import { useSidebar } from '~/components/ui/sidebar';
 import { cn } from '~/utils/cn';
-import { BoardWorkspaceForm, FormInput } from './BoardWorkspaceForm';
+import { BoardWorkspaceForm, FormInput } from './board-workspace-form';
 
 interface DropdownProps {
   workspace: Doc<'workspaces'>;

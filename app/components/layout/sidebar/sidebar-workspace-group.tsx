@@ -1,17 +1,17 @@
+import { Link, useLocation } from '@tanstack/react-router';
 import { Doc } from 'convex/_generated/dataModel';
 import { ChevronRight } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  SidebarMenuItem,
   SidebarMenuButton,
+  SidebarMenuItem,
   SidebarMenuSub,
-  SidebarMenuSubItem,
   SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from '~/components/ui/sidebar';
 import { cn } from '~/utils/cn';
 import { AppSidebarBoardDropdown } from './sidebar-board-dropdown';
 import { AppSidebarWorkspaceDropdown } from './sidebar-workspace-dropdown';
-import { Link } from '@tanstack/react-router';
 
 export const AppSidebarWorkspaceGroup = ({
   workspace,
@@ -21,6 +21,21 @@ export const AppSidebarWorkspaceGroup = ({
   boards: Array<Doc<'boards'>>;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = useLocation({
+    select: (location) => location.pathname,
+  });
+
+  useEffect(() => {
+    if (isOpen) return;
+
+    const isWorkspacePath = pathname.includes(workspace._id);
+    const isBoardPath = boards.some((board) => pathname.includes(board._id));
+
+    if (isWorkspacePath || isBoardPath) {
+      setIsOpen(true);
+    }
+  }, [pathname]);
+
   return (
     <SidebarMenuItem>
       <div className="flex items-center group/ws">
