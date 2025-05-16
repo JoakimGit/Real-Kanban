@@ -15,7 +15,7 @@ import { Route as AuthedImport } from './_routes/_authed'
 import { Route as AuthedIndexImport } from './_routes/_authed/index'
 import { Route as AuthedWorkspacesWorkspaceIdImport } from './_routes/_authed/workspaces.$workspaceId'
 import { Route as AuthedBoardsBoardIdImport } from './_routes/_authed/boards.$boardId'
-import { Route as AuthedWorkspacesWorkspaceIdSettingsImport } from './_routes/_authed/workspaces.$workspaceId.settings'
+import { Route as AuthedWorkspacesWorkspaceIdSettingsImport } from './_routes/_authed/workspaces_.$workspaceId.settings'
 
 // Create/Update Routes
 
@@ -45,9 +45,9 @@ const AuthedBoardsBoardIdRoute = AuthedBoardsBoardIdImport.update({
 
 const AuthedWorkspacesWorkspaceIdSettingsRoute =
   AuthedWorkspacesWorkspaceIdSettingsImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => AuthedWorkspacesWorkspaceIdRoute,
+    id: '/workspaces_/$workspaceId/settings',
+    path: '/workspaces/$workspaceId/settings',
+    getParentRoute: () => AuthedRoute,
   } as any)
 
 // Populate the FileRoutesByPath interface
@@ -82,44 +82,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedWorkspacesWorkspaceIdImport
       parentRoute: typeof AuthedImport
     }
-    '/_authed/workspaces/$workspaceId/settings': {
-      id: '/_authed/workspaces/$workspaceId/settings'
-      path: '/settings'
+    '/_authed/workspaces_/$workspaceId/settings': {
+      id: '/_authed/workspaces_/$workspaceId/settings'
+      path: '/workspaces/$workspaceId/settings'
       fullPath: '/workspaces/$workspaceId/settings'
       preLoaderRoute: typeof AuthedWorkspacesWorkspaceIdSettingsImport
-      parentRoute: typeof AuthedWorkspacesWorkspaceIdImport
+      parentRoute: typeof AuthedImport
     }
   }
 }
 
 // Create and export the route tree
 
-interface AuthedWorkspacesWorkspaceIdRouteChildren {
-  AuthedWorkspacesWorkspaceIdSettingsRoute: typeof AuthedWorkspacesWorkspaceIdSettingsRoute
-}
-
-const AuthedWorkspacesWorkspaceIdRouteChildren: AuthedWorkspacesWorkspaceIdRouteChildren =
-  {
-    AuthedWorkspacesWorkspaceIdSettingsRoute:
-      AuthedWorkspacesWorkspaceIdSettingsRoute,
-  }
-
-const AuthedWorkspacesWorkspaceIdRouteWithChildren =
-  AuthedWorkspacesWorkspaceIdRoute._addFileChildren(
-    AuthedWorkspacesWorkspaceIdRouteChildren,
-  )
-
 interface AuthedRouteChildren {
   AuthedIndexRoute: typeof AuthedIndexRoute
   AuthedBoardsBoardIdRoute: typeof AuthedBoardsBoardIdRoute
-  AuthedWorkspacesWorkspaceIdRoute: typeof AuthedWorkspacesWorkspaceIdRouteWithChildren
+  AuthedWorkspacesWorkspaceIdRoute: typeof AuthedWorkspacesWorkspaceIdRoute
+  AuthedWorkspacesWorkspaceIdSettingsRoute: typeof AuthedWorkspacesWorkspaceIdSettingsRoute
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
   AuthedIndexRoute: AuthedIndexRoute,
   AuthedBoardsBoardIdRoute: AuthedBoardsBoardIdRoute,
-  AuthedWorkspacesWorkspaceIdRoute:
-    AuthedWorkspacesWorkspaceIdRouteWithChildren,
+  AuthedWorkspacesWorkspaceIdRoute: AuthedWorkspacesWorkspaceIdRoute,
+  AuthedWorkspacesWorkspaceIdSettingsRoute:
+    AuthedWorkspacesWorkspaceIdSettingsRoute,
 }
 
 const AuthedRouteWithChildren =
@@ -129,14 +116,14 @@ export interface FileRoutesByFullPath {
   '': typeof AuthedRouteWithChildren
   '/': typeof AuthedIndexRoute
   '/boards/$boardId': typeof AuthedBoardsBoardIdRoute
-  '/workspaces/$workspaceId': typeof AuthedWorkspacesWorkspaceIdRouteWithChildren
+  '/workspaces/$workspaceId': typeof AuthedWorkspacesWorkspaceIdRoute
   '/workspaces/$workspaceId/settings': typeof AuthedWorkspacesWorkspaceIdSettingsRoute
 }
 
 export interface FileRoutesByTo {
   '/': typeof AuthedIndexRoute
   '/boards/$boardId': typeof AuthedBoardsBoardIdRoute
-  '/workspaces/$workspaceId': typeof AuthedWorkspacesWorkspaceIdRouteWithChildren
+  '/workspaces/$workspaceId': typeof AuthedWorkspacesWorkspaceIdRoute
   '/workspaces/$workspaceId/settings': typeof AuthedWorkspacesWorkspaceIdSettingsRoute
 }
 
@@ -145,8 +132,8 @@ export interface FileRoutesById {
   '/_authed': typeof AuthedRouteWithChildren
   '/_authed/': typeof AuthedIndexRoute
   '/_authed/boards/$boardId': typeof AuthedBoardsBoardIdRoute
-  '/_authed/workspaces/$workspaceId': typeof AuthedWorkspacesWorkspaceIdRouteWithChildren
-  '/_authed/workspaces/$workspaceId/settings': typeof AuthedWorkspacesWorkspaceIdSettingsRoute
+  '/_authed/workspaces/$workspaceId': typeof AuthedWorkspacesWorkspaceIdRoute
+  '/_authed/workspaces_/$workspaceId/settings': typeof AuthedWorkspacesWorkspaceIdSettingsRoute
 }
 
 export interface FileRouteTypes {
@@ -169,7 +156,7 @@ export interface FileRouteTypes {
     | '/_authed/'
     | '/_authed/boards/$boardId'
     | '/_authed/workspaces/$workspaceId'
-    | '/_authed/workspaces/$workspaceId/settings'
+    | '/_authed/workspaces_/$workspaceId/settings'
   fileRoutesById: FileRoutesById
 }
 
@@ -199,7 +186,8 @@ export const routeTree = rootRoute
       "children": [
         "/_authed/",
         "/_authed/boards/$boardId",
-        "/_authed/workspaces/$workspaceId"
+        "/_authed/workspaces/$workspaceId",
+        "/_authed/workspaces_/$workspaceId/settings"
       ]
     },
     "/_authed/": {
@@ -212,14 +200,11 @@ export const routeTree = rootRoute
     },
     "/_authed/workspaces/$workspaceId": {
       "filePath": "_authed/workspaces.$workspaceId.tsx",
-      "parent": "/_authed",
-      "children": [
-        "/_authed/workspaces/$workspaceId/settings"
-      ]
+      "parent": "/_authed"
     },
-    "/_authed/workspaces/$workspaceId/settings": {
-      "filePath": "_authed/workspaces.$workspaceId.settings.tsx",
-      "parent": "/_authed/workspaces/$workspaceId"
+    "/_authed/workspaces_/$workspaceId/settings": {
+      "filePath": "_authed/workspaces_.$workspaceId.settings.tsx",
+      "parent": "/_authed"
     }
   }
 }

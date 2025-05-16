@@ -1,0 +1,424 @@
+import { convexQuery, useConvexMutation } from '@convex-dev/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
+import { api } from 'convex/_generated/api';
+import { Doc, Id } from 'convex/_generated/dataModel';
+import {
+  CalendarIcon,
+  CheckSquareIcon,
+  PlusIcon,
+  SquareIcon,
+  Trash2Icon,
+} from 'lucide-react';
+import { useState } from 'react';
+import { TaskLabel } from '~/components/ui/badge';
+import { Button } from '~/components/ui/button';
+import { Input } from '~/components/ui/input';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '~/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '~/components/ui/select';
+import { Separator } from '~/components/ui/separator';
+import { Textarea } from '~/components/ui/textarea';
+import { cn } from '~/utils/cn';
+import { formatDate } from '~/utils/date';
+import { TaskWithRelatedData } from './dnd/column';
+import { Calendar } from '~/components/ui/calendar';
+
+interface TaskDetailSidebarProps {
+  task: TaskWithRelatedData;
+  columns: Array<{ id: string; name: string }>;
+  workspaceId: Id<'workspaces'>;
+}
+
+const BlurSubmitInput = <T extends string | number>({
+  type = 'text',
+  value,
+  placeholder,
+  onBlur,
+  className,
+  getDisplayText,
+}: {
+  type?: 'text' | 'block' | 'number';
+  value: T | undefined;
+  placeholder?: string;
+  onBlur: (inputValue: T) => void;
+  className?: string;
+  getDisplayText?: (val: T | undefined) => React.ReactNode;
+}) => {
+  const [inputValue, setInputValue] = useState<T | undefined>(value);
+  const [editMode, setEditMode] = useState(false);
+
+  const handleBlur = async () => {
+    setEditMode(false);
+    if (inputValue == undefined) return;
+
+    if (value !== inputValue) {
+      onBlur(inputValue);
+    }
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const val = e.target.value;
+    setInputValue((type === 'number' ? Number(val) : val) as T);
+  };
+
+  const inputProps = {
+    className,
+    value: inputValue ?? '',
+    onChange: handleChange,
+    onBlur: handleBlur,
+    placeholder,
+    autoFocus: true,
+  };
+
+  if (editMode) {
+    const InputComponent = type === 'block' ? Textarea : Input;
+    return (
+      <InputComponent
+        type={type === 'number' ? 'number' : 'text'}
+        {...inputProps}
+      />
+    );
+  }
+
+  return (
+    <p
+      className={cn('cursor-pointer', className)}
+      onClick={() => setEditMode(true)}
+    >
+      {(getDisplayText ? getDisplayText(inputValue) : inputValue) ??
+        placeholder}
+    </p>
+  );
+};
+
+export default function TaskDetailSidebar({
+  task,
+  columns,
+  workspaceId,
+}: TaskDetailSidebarProps) {
+  const [newSubtaskName, setNewSubtaskTitle] = useState('');
+  const [isAddingSubtask, setIsAddingSubtask] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  const { mutate: updateTask } = useMutation({
+    mutationFn: useConvexMutation(api.tasks.updateTask),
+  });
+
+  const { mutate: createChecklistItem } = useMutation({
+    mutationFn: useConvexMutation(api.tasks.createChecklistItem),
+  });
+
+  const { mutate: updateChecklistItem } = useMutation({
+    mutationFn: useConvexMutation(api.tasks.updateChecklistItem),
+  });
+
+  const { mutate: deleteChecklistItem } = useMutation({
+    mutationFn: useConvexMutation(api.tasks.deleteChecklistItem),
+  });
+
+  const { data: labels, isPending } = useQuery(
+    convexQuery(api.workspaces.getWorkspaceLabels, { workspaceId }),
+  );
+
+  const handlePriorityChange = (priority: string) => {
+    updateTask({
+      taskId: task._id,
+      priority: priority as Doc<'tasks'>['priority'],
+    });
+  };
+
+  const addChecklistItem = () => {
+    if (newSubtaskName.trim() === '') return;
+
+    const lastChecklistItemPosition = task.checklistItems.at(-1)?.position || 0;
+    createChecklistItem(
+      {
+        taskId: task._id,
+        name: newSubtaskName,
+        position: lastChecklistItemPosition + 1,
+      },
+      { onSuccess: () => setIsAddingSubtask(false) },
+    );
+  };
+
+  return (
+    <div className="h-full w-full bg-background flex flex-col text-muted-foreground">
+      <div className="p-6 text-foreground text-lg font-semibold border-b">
+        <BlurSubmitInput
+          type="block"
+          className="min-h-14 text-lg mr-6"
+          value={task.name}
+          onBlur={(name) => updateTask({ taskId: task._id, name })}
+        />
+      </div>
+
+      <div className="flex-1 overflow-y-auto py-4 px-6 space-y-6">
+        {/* Labels */}
+        <DetailGroup
+          label={
+            <span className="flex items-center gap-x-2">
+              Labels
+              <Popover>
+                <PopoverTrigger asChild>
+                  <PlusIcon className="size-5 cursor-pointer text-primary" />
+                </PopoverTrigger>
+                <PopoverContent className="" align="start">
+                  {labels?.map((label) => (
+                    <div key={label._id} className={cn('p-2', label.color)}>
+                      {label.name}
+                    </div>
+                  ))}
+                </PopoverContent>
+              </Popover>
+            </span>
+          }
+        >
+          <div className="flex flex-wrap gap-1">
+            {task.labels.map((label) => (
+              <TaskLabel key={label._id} className={label.color}>
+                {label.name}
+              </TaskLabel>
+            ))}
+          </div>
+        </DetailGroup>
+
+        {/* Description */}
+        <DetailGroup label="Description">
+          <BlurSubmitInput
+            className="text-sm"
+            type="block"
+            value={task.description}
+            placeholder="Add description"
+            onBlur={(description) =>
+              updateTask({ taskId: task._id, description })
+            }
+          />
+        </DetailGroup>
+
+        {/* Estimate */}
+        <DetailGroup label="Estimate">
+          <BlurSubmitInput
+            type="number"
+            className="shadow-none w-16"
+            value={task.estimate}
+            placeholder="Estimate in hours"
+            onBlur={(estimate) => updateTask({ taskId: task._id, estimate })}
+            getDisplayText={(val) => (val ? `${val}h` : null)}
+          />
+        </DetailGroup>
+
+        {/* Assigned To */}
+        <div className="grid grid-cols-2 items-center gap-x-6">
+          <DetailGroup label="Assigned To">
+            <Select
+              value={task.assignedTo?._id}
+              onValueChange={(val) =>
+                updateTask({
+                  taskId: task._id,
+                  assignedTo: val as Id<'users'>,
+                })
+              }
+            >
+              <SelectTrigger className="capitalize [&>span]:pr-1">
+                <SelectValue placeholder="Assign user.." />
+              </SelectTrigger>
+              <SelectContent>
+                {/* <SelectItem
+                  key={task.assignedTo?._id}
+                  value={task.assignedTo?._id}
+                  className="capitalize"
+                >
+                  {getUserDisplayName(task.assignedTo?.clerkUser)}
+                </SelectItem> */}
+                {/* TODO - Fetch all users for the board */}
+              </SelectContent>
+            </Select>
+          </DetailGroup>
+
+          {/* Column */}
+          <DetailGroup label="Column">
+            <Select
+              value={task.columnId}
+              onValueChange={(val) =>
+                updateTask({
+                  taskId: task._id,
+                  columnId: val as Id<'columns'>,
+                })
+              }
+            >
+              <SelectTrigger className="capitalize [&>span]:pr-1">
+                <SelectValue placeholder="Select priority" />
+              </SelectTrigger>
+              <SelectContent>
+                {columns.map((col) => (
+                  <SelectItem key={col.id} value={col.id}>
+                    {col.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </DetailGroup>
+        </div>
+
+        {/* Priority */}
+        <div className="grid grid-cols-2 items-center gap-x-6">
+          <DetailGroup label="Priority">
+            <Select
+              value={task.priority}
+              onValueChange={(val) => handlePriorityChange(val)}
+            >
+              <SelectTrigger className="capitalize [&>span]:pr-1">
+                <SelectValue placeholder="Select priority" />
+              </SelectTrigger>
+              <SelectContent>
+                {['low', 'medium', 'high', 'critical'].map((prio) => (
+                  <SelectItem key={prio} value={prio} className="capitalize">
+                    {prio}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </DetailGroup>
+
+          {/* Due Date */}
+          <DetailGroup label="Due Date">
+            <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline-nohover"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {task.dueDate ? (
+                    formatDate(task.dueDate)
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  selected={task.dueDate ? new Date(task.dueDate) : undefined}
+                  onSelect={(day) => {
+                    updateTask({ taskId: task._id, dueDate: day?.getTime() });
+                    setIsCalendarOpen(false);
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </DetailGroup>
+        </div>
+
+        <Separator className="dark:bg-gray-700" />
+
+        {/* Subtasks */}
+        <div>
+          <div className="flex items-center gap-x-2 mb-2">
+            <h4 className="text-foreground font-semibold">Subtasks</h4>
+            <PlusIcon
+              className="size-5 cursor-pointer text-primary"
+              onClick={() => setIsAddingSubtask(true)}
+            />
+          </div>
+
+          <div className="space-y-2">
+            {task.checklistItems.length === 0 ? (
+              <p className="text-sm ">No subtasks yet.</p>
+            ) : (
+              task.checklistItems.map((item) => (
+                <div
+                  key={item._id}
+                  className="flex items-center justify-between rounded-md"
+                >
+                  <div className="flex items-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 mr-2"
+                      onClick={() =>
+                        updateChecklistItem({
+                          checklistItemId: item._id,
+                          isComplete: !item.isComplete,
+                        })
+                      }
+                    >
+                      {item.isComplete ? (
+                        <CheckSquareIcon className="size-5 text-primary" />
+                      ) : (
+                        <SquareIcon className="size-5" />
+                      )}
+                    </Button>
+
+                    <BlurSubmitInput
+                      className={`h-auto text-sm ${item.isComplete ? 'line-through opacity-50' : ''}`}
+                      value={item.name}
+                      onBlur={(name) =>
+                        updateChecklistItem({
+                          checklistItemId: item._id,
+                          name,
+                        })
+                      }
+                    />
+                  </div>
+                  <Trash2Icon
+                    className="size-5 text-destructive cursor-pointer"
+                    onClick={() =>
+                      deleteChecklistItem({
+                        checklistItemId: item._id,
+                      })
+                    }
+                  />
+                </div>
+              ))
+            )}
+          </div>
+
+          {isAddingSubtask && (
+            <Input
+              value={newSubtaskName}
+              onChange={(e) => setNewSubtaskTitle(e.target.value)}
+              placeholder="Subtask title"
+              className="mt-2"
+              onBlur={() => addChecklistItem()}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') addChecklistItem();
+              }}
+            />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const DetailGroup = ({
+  label,
+  children,
+  className,
+}: {
+  label: React.ReactNode;
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <div className={className}>
+      <label className="text-foreground font-semibold block mb-1">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+};

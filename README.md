@@ -21,8 +21,8 @@
 
 3. Board columns and tasks
 
-- [ ] create board view with columns/tasks
-- [ ] modal for updating task with all its properties, including checklist items
+- [x] create board view with columns/tasks
+- [x] modal for updating task with all its properties, including checklist items
 - [ ] implement drag & drop
 - [ ] various actions (minimize task properties, copy task, move task, create col/task/checklistitem, deletes, etc.)
 
@@ -41,6 +41,7 @@
 
 6. Polish
 
+- [ ] make responsive for mobile
 - [ ] better error handling?
 - [ ] logging/metrics?
 - [ ] overall ui polishing
