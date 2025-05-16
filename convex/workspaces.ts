@@ -82,3 +82,23 @@ export const getUserWorkspaces = query({
     return result;
   },
 });
+
+export const getWorkspace = query({
+  args: {
+    workspaceId: v.id('workspaces'),
+  },
+  handler: async (ctx, { workspaceId }) => {
+    await mustGetCurrentUser(ctx);
+    return await ctx.db.get(workspaceId);
+  },
+});
+
+export const getWorkspaceLabels = query({
+  args: {
+    workspaceId: v.id('workspaces'),
+  },
+  handler: async (ctx, { workspaceId }) => {
+    await mustGetCurrentUser(ctx);
+    return await getManyFrom(ctx.db, 'labels', 'by_workspaceId', workspaceId);
+  },
+});

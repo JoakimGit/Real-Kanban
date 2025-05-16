@@ -19,6 +19,7 @@ export const createTask = mutation({
 export const updateTask = mutation({
   args: {
     taskId: v.id('tasks'),
+    columnId: v.optional(v.id('columns')),
     name: v.optional(v.string()),
     position: v.optional(v.float64()),
     priority: v.optional(
@@ -87,5 +88,42 @@ export const removeLabelFromTask = mutation({
       )) {
       await ctx.db.delete(link._id);
     }
+  },
+});
+
+/* ChecklistItem APIs */
+
+export const createChecklistItem = mutation({
+  args: {
+    taskId: v.id('tasks'),
+    name: v.string(),
+    position: v.float64(),
+  },
+  handler: async (ctx, data) => {
+    await mustGetCurrentUser(ctx);
+    await ctx.db.insert('checklistItems', { ...data, isComplete: false });
+  },
+});
+
+export const updateChecklistItem = mutation({
+  args: {
+    checklistItemId: v.id('checklistItems'),
+    name: v.optional(v.string()),
+    position: v.optional(v.float64()),
+    isComplete: v.optional(v.boolean()),
+  },
+  handler: async (ctx, { checklistItemId, ...data }) => {
+    await mustGetCurrentUser(ctx);
+    await ctx.db.patch(checklistItemId, { ...data });
+  },
+});
+
+export const deleteChecklistItem = mutation({
+  args: {
+    checklistItemId: v.id('checklistItems'),
+  },
+  handler: async (ctx, { checklistItemId }) => {
+    await mustGetCurrentUser(ctx);
+    await ctx.db.delete(checklistItemId);
   },
 });
