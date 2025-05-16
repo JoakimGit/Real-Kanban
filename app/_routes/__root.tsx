@@ -1,7 +1,7 @@
 import { ClerkProvider, useAuth } from '@clerk/tanstack-react-start';
 import { getAuth } from '@clerk/tanstack-react-start/server';
 import { ConvexQueryClient } from '@convex-dev/react-query';
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, useQueryClient } from '@tanstack/react-query';
 import {
   HeadContent,
   Outlet,
@@ -10,9 +10,9 @@ import {
   useRouteContext,
 } from '@tanstack/react-router';
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
-import { createServerFn } from '@tanstack/react-start';
+import { createIsomorphicFn } from '@tanstack/react-start';
 import * as React from 'react';
-import { getWebRequest } from 'vinxi/http';
+import { getWebRequest } from '@tanstack/react-start/server';
 import { DefaultCatchBoundary } from '~/components/router/DefaultCatchBoundary.js';
 import { NotFound } from '~/components/router/NotFound.js';
 import appCss from '~/styles/app.css?url';
@@ -20,16 +20,26 @@ import appCss from '~/styles/app.css?url';
 import { ConvexReactClient } from 'convex/react';
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
 import { ThemeProvider } from '~/components/theme-provider';
+import { useEffect } from 'react';
 
-const fetchClerkAuth = createServerFn().handler(async () => {
-  const auth = await getAuth(getWebRequest());
-  const token = await auth.getToken({ template: 'convex' });
+export const $getSession = createIsomorphicFn()
+  .client(async (queryClient: QueryClient) => {
+    const auth = queryClient.getQueryData<{
+      userId: string | null;
+      token: null;
+    }>(['auth', 'user']);
 
-  return {
-    userId: auth.userId,
-    token,
-  };
-});
+    return auth ?? { userId: null, token: null };
+  })
+  .server(async () => {
+    const auth = await getAuth(getWebRequest()!);
+    const token = await auth.getToken({ template: 'convex' });
+
+    return {
+      userId: auth.userId,
+      token,
+    };
+  });
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient;
@@ -37,8 +47,7 @@ export const Route = createRootRouteWithContext<{
   convexQueryClient: ConvexQueryClient;
 }>()({
   beforeLoad: async (ctx) => {
-    const auth = await fetchClerkAuth();
-    const { userId, token } = auth;
+    const { userId, token } = await $getSession(ctx.context.queryClient);
 
     // During SSR only (the only time serverHttpClient exists),
     // set the Clerk auth token to make HTTP queries with.
@@ -95,15 +104,21 @@ export const Route = createRootRouteWithContext<{
 
 function RootComponent() {
   const context = useRouteContext({ from: Route.id });
+
   return (
     <ClerkProvider>
-      <ConvexProviderWithClerk client={context.convexClient} useAuth={useAuth}>
-        <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
-          <RootDocument>
-            <Outlet />
-          </RootDocument>
-        </ThemeProvider>
-      </ConvexProviderWithClerk>
+      <AuthHydrator>
+        <ConvexProviderWithClerk
+          client={context.convexClient}
+          useAuth={useAuth}
+        >
+          <ThemeProvider defaultTheme="dark" storageKey="ui-theme">
+            <RootDocument>
+              <Outlet />
+            </RootDocument>
+          </ThemeProvider>
+        </ConvexProviderWithClerk>
+      </AuthHydrator>
     </ClerkProvider>
   );
 }
@@ -121,4 +136,17 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </body>
     </html>
   );
+}
+
+function AuthHydrator({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient();
+  const { userId } = useAuth();
+
+  useEffect(() => {
+    if (userId) {
+      queryClient.setQueryData(['auth', 'user'], { userId, token: null });
+    }
+  }, [userId, queryClient]);
+
+  return <>{children}</>;
 }
