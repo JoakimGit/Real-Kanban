@@ -38,11 +38,21 @@ const sides = {
     'inset-y-0 right-0 h-full w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm',
 };
 
+export const taskSidebarModalClasses = (className?: string) =>
+  cn(baseClasses, sides['right'], className);
+
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content> {
   side?: keyof typeof sides;
   overlay?: boolean;
 }
+
+const SheetCloseBtn = ({ className }: { className?: string }) => (
+  <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
+    <X className={cn('size-5', className)} />
+    <span className="sr-only">Close</span>
+  </SheetPrimitive.Close>
+);
 
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
@@ -55,10 +65,7 @@ const SheetContent = React.forwardRef<
       className={cn(baseClasses, sides[side], className)}
       {...props}
     >
-      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-secondary">
-        <X className="h-4 w-4" />
-        <span className="sr-only">Close</span>
-      </SheetPrimitive.Close>
+      <SheetCloseBtn />
       {children}
     </SheetPrimitive.Content>
   </SheetPortal>
@@ -128,4 +135,5 @@ export {
   SheetFooter,
   SheetTitle,
   SheetDescription,
+  SheetCloseBtn,
 };

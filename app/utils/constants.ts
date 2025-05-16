@@ -14,3 +14,6 @@ export const availableColorClasses = [
   'bg-orange-600',
   'bg-emerald-600',
 ];
+
+export const inputLikeClasses =
+  'flex w-full rounded-md border border-input bg-transparent text-base transition-colors md:text-sm';
