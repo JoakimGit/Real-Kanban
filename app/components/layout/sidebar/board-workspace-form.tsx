@@ -73,7 +73,6 @@ export const BoardWorkspaceForm = ({
           Description
         </label>
         <Textarea
-          className="resize-none"
           id="item-description"
           value={description ?? ''} // Use initialDescription from props as value
           onChange={(e) => setDescription(e.target.value)}
