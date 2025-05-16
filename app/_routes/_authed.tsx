@@ -1,20 +1,15 @@
 import { createFileRoute, Outlet } from '@tanstack/react-router';
-import { SignIn } from '@clerk/tanstack-react-start';
+import { SignIn, useAuth } from '@clerk/tanstack-react-start';
 import { AppSidebar } from '~/components/layout/sidebar/app-sidebar';
 import { HeaderBar } from '~/components/layout/header-bar';
 import { SidebarProvider, SidebarInset } from '~/components/ui/sidebar';
 
 export const Route = createFileRoute('/_authed')({
-  beforeLoad: ({ context }) => {
-    if (!context.userId) {
-      throw new Error('Not authenticated');
-    }
-  },
   errorComponent: ({ error }) => {
     if (error.message === 'Not authenticated') {
       return (
         <div className="flex items-center justify-center p-12">
-          <SignIn routing="hash" forceRedirectUrl={window.location.href} />
+          <SignIn routing="hash" />
         </div>
       );
     }
@@ -25,6 +20,16 @@ export const Route = createFileRoute('/_authed')({
 });
 
 function ProtectedLayout() {
+  const { isSignedIn } = useAuth();
+
+  if (!isSignedIn) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <SignIn routing="hash" />
+      </div>
+    );
+  }
+
   return (
     <SidebarProvider>
       <AppSidebar />
