@@ -3,13 +3,16 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { api } from 'convex/_generated/api';
 import { Doc, Id } from 'convex/_generated/dataModel';
 import {
+  ArrowLeftIcon,
   CalendarIcon,
+  CheckIcon,
   CheckSquareIcon,
+  PencilIcon,
   PlusIcon,
   SquareIcon,
   Trash2Icon,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { TaskLabel } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
@@ -31,6 +34,9 @@ import { cn } from '~/utils/cn';
 import { formatDate } from '~/utils/date';
 import { TaskWithRelatedData } from './dnd/column';
 import { Calendar } from '~/components/ui/calendar';
+import { CreateLabelForm } from '~/_routes/_authed/workspaces_.$workspaceId.settings';
+import { colorSelections } from '~/utils/constants';
+import { LabelInput } from '~/utils/validation';
 
 interface TaskDetailSidebarProps {
   task: TaskWithRelatedData;
@@ -38,7 +44,7 @@ interface TaskDetailSidebarProps {
   workspaceId: Id<'workspaces'>;
 }
 
-const BlurSubmitInput = <T extends string | number>({
+export const BlurSubmitInput = <T extends string | number>({
   type = 'text',
   value,
   placeholder,
@@ -108,7 +114,6 @@ export default function TaskDetailSidebar({
   workspaceId,
 }: TaskDetailSidebarProps) {
   const [newSubtaskName, setNewSubtaskTitle] = useState('');
-  const [isAddingSubtask, setIsAddingSubtask] = useState(false);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const { mutate: updateTask } = useMutation({
@@ -127,7 +132,7 @@ export default function TaskDetailSidebar({
     mutationFn: useConvexMutation(api.tasks.deleteChecklistItem),
   });
 
-  const { data: labels, isPending } = useQuery(
+  const { data: labels } = useQuery(
     convexQuery(api.workspaces.getWorkspaceLabels, { workspaceId }),
   );
 
@@ -142,14 +147,11 @@ export default function TaskDetailSidebar({
     if (newSubtaskName.trim() === '') return;
 
     const lastChecklistItemPosition = task.checklistItems.at(-1)?.position || 0;
-    createChecklistItem(
-      {
-        taskId: task._id,
-        name: newSubtaskName,
-        position: lastChecklistItemPosition + 1,
-      },
-      { onSuccess: () => setIsAddingSubtask(false) },
-    );
+    createChecklistItem({
+      taskId: task._id,
+      name: newSubtaskName,
+      position: lastChecklistItemPosition + 1,
+    });
   };
 
   return (
@@ -157,7 +159,7 @@ export default function TaskDetailSidebar({
       <div className="p-6 text-foreground text-lg font-semibold border-b">
         <BlurSubmitInput
           type="block"
-          className="min-h-14 text-lg mr-6"
+          className="min-h-14 text-lg mr-10"
           value={task.name}
           onBlur={(name) => updateTask({ taskId: task._id, name })}
         />
@@ -173,12 +175,16 @@ export default function TaskDetailSidebar({
                 <PopoverTrigger asChild>
                   <PlusIcon className="size-5 cursor-pointer text-primary" />
                 </PopoverTrigger>
-                <PopoverContent className="" align="start">
-                  {labels?.map((label) => (
-                    <div key={label._id} className={cn('p-2', label.color)}>
-                      {label.name}
-                    </div>
-                  ))}
+                <PopoverContent
+                  className="max-h-80 overflow-y-auto"
+                  align="start"
+                >
+                  <LabelsList
+                    labels={labels ?? []}
+                    workspaceId={workspaceId}
+                    taskId={task._id}
+                    taskLabels={task.labels}
+                  />
                 </PopoverContent>
               </Popover>
             </span>
@@ -326,13 +332,7 @@ export default function TaskDetailSidebar({
 
         {/* Subtasks */}
         <div>
-          <div className="flex items-center gap-x-2 mb-2">
-            <h4 className="text-foreground font-semibold">Subtasks</h4>
-            <PlusIcon
-              className="size-5 cursor-pointer text-primary"
-              onClick={() => setIsAddingSubtask(true)}
-            />
-          </div>
+          <h4 className="text-foreground font-semibold mb-2">Subtasks</h4>
 
           <div className="space-y-2">
             {task.checklistItems.length === 0 ? (
@@ -386,23 +386,172 @@ export default function TaskDetailSidebar({
             )}
           </div>
 
-          {isAddingSubtask && (
-            <Input
-              value={newSubtaskName}
-              onChange={(e) => setNewSubtaskTitle(e.target.value)}
-              placeholder="Subtask title"
-              className="mt-2"
-              onBlur={() => addChecklistItem()}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') addChecklistItem();
-              }}
-            />
-          )}
+          <Input
+            value={newSubtaskName}
+            onChange={(e) => setNewSubtaskTitle(e.target.value)}
+            placeholder="Add subtask.."
+            className="mt-2"
+            onBlur={() => addChecklistItem()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') addChecklistItem();
+            }}
+          />
+        </div>
+
+        {/* Attachments */}
+        <Separator className="dark:bg-gray-700" />
+
+        <div>
+          <div className="flex items-center gap-x-2 mb-2">
+            <h4 className="text-foreground font-semibold">
+              Attachments (under construction)
+            </h4>
+          </div>
+        </div>
+
+        {/* Comments */}
+        <Separator className="dark:bg-gray-700" />
+
+        <div>
+          <div className="flex items-center gap-x-2 mb-2">
+            <h4 className="text-foreground font-semibold">
+              Comments (under construction)
+            </h4>
+          </div>
+        </div>
+
+        {/* Activity log */}
+        <Separator className="dark:bg-gray-700" />
+
+        <div>
+          <div className="flex items-center gap-x-2 mb-2">
+            <h4 className="text-foreground font-semibold">
+              Activity log (under construction)
+            </h4>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
+interface LabelsListProps {
+  labels: Array<Doc<'labels'>>;
+  workspaceId: Id<'workspaces'>;
+  taskId: Id<'tasks'>;
+  taskLabels: Array<Doc<'labels'>>;
+}
+const LabelsList = ({
+  labels,
+  workspaceId,
+  taskId,
+  taskLabels,
+}: LabelsListProps) => {
+  const [search, setSearch] = useState('');
+  const [mode, setMode] = useState<'view' | 'create' | 'edit'>('view');
+  const [selectedLabel, setSelectedLabel] = useState<Doc<'labels'> | null>(
+    null,
+  );
+
+  const taskLabelIds = useMemo(
+    () => new Set(taskLabels.map((l) => l._id)),
+    [taskLabels],
+  );
+
+  const { mutate: createLabel } = useMutation({
+    mutationFn: useConvexMutation(api.workspaces.createLabel),
+  });
+
+  const { mutate: updateLabel } = useMutation({
+    mutationFn: useConvexMutation(api.workspaces.updateLabel),
+  });
+
+  const { mutate: setLabelToTask } = useMutation({
+    mutationFn: useConvexMutation(api.workspaces.setLabelToTask),
+  });
+
+  const handleLabelSubmit = (label: LabelInput) => {
+    if (mode === 'create') {
+      createLabel({ workspaceId, ...label });
+    } else if (mode === 'edit' && selectedLabel) {
+      updateLabel({ labelId: selectedLabel?._id, ...label });
+    }
+
+    setMode('view');
+  };
+
+  const filteredLabels = useMemo(() => {
+    return search === ''
+      ? labels
+      : labels.filter((label) => label.name.toLowerCase().includes(search));
+  }, [search, labels]);
+
+  if (mode !== 'view') {
+    const labelColor = colorSelections.find(
+      (color) => color.value === selectedLabel?.color,
+    );
+    return (
+      <>
+        <div className="absolute top-4 right-4">
+          <Button variant="outline" size="icon" onClick={() => setMode('view')}>
+            <ArrowLeftIcon className="h-4 w-4" />
+            <span className="sr-only">Back</span>
+          </Button>
+        </div>
+        <CreateLabelForm
+          className="flex-col items-start m-auto pt-2"
+          defaultColor={mode === 'edit' ? labelColor : undefined}
+          defaultName={mode === 'edit' ? selectedLabel?.name : undefined}
+          onAddLabel={handleLabelSubmit}
+        />
+      </>
+    );
+  }
+
+  return (
+    <>
+      <label className="block text-sm mb-1">Filter or create labels</label>
+
+      <div className="flex items-center gap-x-2">
+        <Input
+          className="mb-2 w-auto grow rounded-none shrink-0"
+          placeholder="Search labels.."
+          value={search}
+          onChange={(e) => setSearch(e.target.value.toLowerCase())}
+        />
+        <button onClick={() => setMode('create')}>
+          <PlusIcon className="size-4" />
+        </button>
+      </div>
+
+      <div className="flex flex-col gap-y-2">
+        {filteredLabels.map((label) => (
+          <div key={label._id} className="flex items-center gap-x-2">
+            <button
+              className={cn(
+                'flex items-center justify-between text-left grow py-2 px-3',
+                label.color,
+              )}
+              onClick={() => setLabelToTask({ labelId: label._id, taskId })}
+            >
+              {label.name}
+              {taskLabelIds.has(label._id) && <CheckIcon className="size-5" />}
+            </button>
+
+            <button
+              onClick={() => {
+                setMode('edit');
+                setSelectedLabel(label);
+              }}
+            >
+              <PencilIcon className="size-4" />
+            </button>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+};
 
 const DetailGroup = ({
   label,
