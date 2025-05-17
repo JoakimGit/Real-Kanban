@@ -111,5 +111,6 @@
   body {
     color: hsl(var(--foreground));
     letter-spacing: var(--tracking-normal);
+    font-family: var(--font-sans);
   }
 }
