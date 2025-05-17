@@ -19,13 +19,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '~/components/ui/popover';
+import { Spinner } from '~/components/ui/spinner';
 
 export const Route = createFileRoute('/_authed/')({
   component: Home,
 });
 
 function Home() {
-  const { data: workspaces } = useQuery(
+  const { data: workspaces, error } = useQuery(
     convexQuery(api.workspaces.getUserWorkspaces, {}),
   );
 
@@ -33,64 +34,84 @@ function Home() {
     mutationFn: useConvexMutation(api.workspaces.createWorkspace),
   });
 
-  return (
-    <div className="space-y-6 py-8 px-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-normal">Workspaces</h1>
-          <p className="text-muted-foreground">
-            Select a workspace to view its boards
-          </p>
+  if (workspaces) {
+    return (
+      <div className="space-y-6 py-8 px-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-normal">Workspaces</h1>
+            <p className="text-muted-foreground">
+              Select a workspace to view its boards
+            </p>
+          </div>
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="accent">
+                <PlusIcon className="mr-2 h-4 w-4" />
+                New Workspace
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className="ml-5 space-y-4"
+              align="start"
+              side="left"
+            >
+              <h2 className="text-lg text-center">Add Workspace</h2>
+
+              <BoardWorkspaceForm
+                onSubmit={(formData) => createWorkspace(formData)}
+              >
+                <PopoverClose asChild>
+                  <Button type="submit">Create</Button>
+                </PopoverClose>
+              </BoardWorkspaceForm>
+            </PopoverContent>
+          </Popover>
         </div>
 
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="accent">
-              <PlusIcon className="mr-2 h-4 w-4" />
-              New Workspace
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="ml-5 space-y-4" align="start" side="left">
-            <h2 className="text-lg text-center">Add Workspace</h2>
-
-            <BoardWorkspaceForm
-              onSubmit={(formData) => createWorkspace(formData)}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {workspaces?.map(({ workspace, boards }) => (
+            <Link
+              to="/workspaces/$workspaceId"
+              params={{ workspaceId: workspace._id }}
+              key={workspace._id}
             >
-              <PopoverClose asChild>
-                <Button type="submit">Create</Button>
-              </PopoverClose>
-            </BoardWorkspaceForm>
-          </PopoverContent>
-        </Popover>
-      </div>
+              <Card className="flex flex-col cursor-pointer transition-all hover:shadow-md">
+                <CardHeader className="pb-2">
+                  <div
+                    className={`w-12 h-1.5 rounded-full mb-2 ${workspace.color}`}
+                  />
+                  <CardTitle>{workspace.name}</CardTitle>
+                  <CardDescription>{workspace.description}</CardDescription>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground grow">
+                  <p>{boards.length} boards</p>
+                </CardContent>
+                <CardFooter className="border-t pt-4">
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <span>7 members</span> {/* TODO - get actual members */}
+                  </div>
+                </CardFooter>
+              </Card>
+            </Link>
+          ))}
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {workspaces?.map(({ workspace, boards }) => (
-          <Link
-            to="/workspaces/$workspaceId"
-            params={{ workspaceId: workspace._id }}
-            key={workspace._id}
-          >
-            <Card className="flex flex-col cursor-pointer transition-all hover:shadow-md">
-              <CardHeader className="pb-2">
-                <div
-                  className={`w-12 h-1.5 rounded-full mb-2 ${workspace.color}`}
-                />
-                <CardTitle>{workspace.name}</CardTitle>
-                <CardDescription>{workspace.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground grow">
-                <p>{boards.length} boards</p>
-              </CardContent>
-              <CardFooter className="border-t pt-4">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <span>7 members</span> {/* TODO - get actual members */}
-                </div>
-              </CardFooter>
-            </Card>
-          </Link>
-        ))}
+          <div className="hidden only:block">
+            No workspaces found. Try creating one first.
+          </div>
+        </div>
       </div>
+    );
+  }
+
+  if (error) {
+    return <div>Error fetching workspaces</div>;
+  }
+
+  return (
+    <div className="flex items-center justify-center h-1/3">
+      <Spinner className="size-10" />
     </div>
   );
 }

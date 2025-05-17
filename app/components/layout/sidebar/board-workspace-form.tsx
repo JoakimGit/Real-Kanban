@@ -2,17 +2,11 @@ import { Input } from '~/components/ui/input';
 import { Textarea } from '~/components/ui/textarea';
 import { cn } from '~/utils/cn';
 import { useState } from 'react';
-import { availableColorClasses } from '~/utils/constants';
-import * as v from 'valibot';
+import { colorSelections } from '~/utils/constants';
 import { Button } from '~/components/ui/button';
-
-const FormSchema = v.object({
-  name: v.pipe(v.string(), v.minLength(1), v.maxLength(50)),
-  description: v.optional(v.pipe(v.string(), v.maxLength(100))),
-  color: v.optional(v.string()),
-});
-
-export type FormInput = v.InferInput<typeof FormSchema>;
+import { FormInput, FormSchema } from '~/utils/validation';
+import * as v from 'valibot';
+import { Spinner } from '~/components/ui/spinner';
 
 interface BoardWorkspaceFormProps {
   initialName?: string;
@@ -20,6 +14,8 @@ interface BoardWorkspaceFormProps {
   initialColor?: string | null;
   onSubmit: (formData: FormInput) => void;
   children?: React.ReactNode;
+  className?: string;
+  isPending?: boolean;
 }
 
 export const BoardWorkspaceForm = ({
@@ -28,11 +24,13 @@ export const BoardWorkspaceForm = ({
   initialColor,
   onSubmit,
   children,
+  className,
+  isPending,
 }: BoardWorkspaceFormProps) => {
   const [name, setName] = useState(initialName ?? '');
   const [description, setDescription] = useState(initialDescription ?? '');
   const [selectedColor, setSelectedColor] = useState(
-    initialColor ?? availableColorClasses[0],
+    initialColor ?? colorSelections[0].value,
   );
 
   const handleColorSelect = (color: string) => {
@@ -53,7 +51,7 @@ export const BoardWorkspaceForm = ({
   };
 
   return (
-    <form className="space-y-4" onSubmit={handleSubmit}>
+    <form className={cn('space-y-4', className)} onSubmit={handleSubmit}>
       <div>
         <label htmlFor="item-name" className="block mb-1 text-sm">
           Name
@@ -87,21 +85,27 @@ export const BoardWorkspaceForm = ({
         <span className={cn('size-4 rounded', selectedColor)} />
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(24px,1fr))] gap-2.5 px-1 pb-2">
-        {availableColorClasses.map((color) => (
+      <div className="flex flex-wrap gap-2.5 px-1 pb-2">
+        {colorSelections.map((color) => (
           <div
-            key={color}
+            key={color.value}
             className={cn(
-              'size-6 cursor-pointer rounded',
-              selectedColor === color && 'scale-75',
-              color,
+              'color-class size-6 cursor-pointer rounded',
+              selectedColor === color.value && 'scale-75',
+              color.value,
             )}
-            onClick={() => handleColorSelect(color)}
+            onClick={() => handleColorSelect(color.value)}
           />
         ))}
       </div>
 
-      {children ? children : <Button type="submit">Save</Button>}
+      {children ? (
+        children
+      ) : (
+        <Button type="submit">
+          {isPending ? <Spinner className="size-5" /> : 'Save'}
+        </Button>
+      )}
     </form>
   );
 };
