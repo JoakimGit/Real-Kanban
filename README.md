@@ -45,8 +45,13 @@
 - [ ] better error handling?
 - [ ] logging/metrics?
 - [ ] overall ui polishing
+- [ ] custom fields on task?
 
 7. Deployment
 
 - [ ] deploy Tanstack app to netlify
 - [ ] deploy convex to production
+
+### Todo
+
+- Optimistic mutations (checklistItem toggle)

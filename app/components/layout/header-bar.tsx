@@ -14,6 +14,7 @@ export const HeaderBar = () => {
       <SidebarTrigger className="-ml-1" />
       <label className="relative flex items-center gap-x-2">
         <SearchIcon className="absolute left-2 size-5 " />
+        {/* TODO - implement search functionality */}
         <input
           className="pl-9 pr-3 py-1.5 bg-inherit border rounded-xl"
           type="text"
