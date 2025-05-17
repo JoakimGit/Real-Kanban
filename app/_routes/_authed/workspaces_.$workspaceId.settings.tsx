@@ -3,22 +3,11 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { api } from 'convex/_generated/api';
 import { Doc, Id } from 'convex/_generated/dataModel';
-import { Spinner } from '~/components/ui/spinner';
+import { Check, MoreVerticalIcon, PencilIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
-import { Input } from '~/components/ui/input';
-import { TagIcon, Trash2Icon, Check, ChevronDown } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu';
+import * as v from 'valibot';
+import { BoardWorkspaceForm } from '~/components/layout/sidebar/board-workspace-form';
 import { Button } from '~/components/ui/button';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '~/components/ui/popover';
 import {
   Card,
   CardContent,
@@ -26,10 +15,23 @@ import {
   CardHeader,
   CardTitle,
 } from '~/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu';
+import { Input } from '~/components/ui/input';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '~/components/ui/popover';
+import { Spinner } from '~/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs';
-import { Textarea } from '~/components/ui/textarea';
-import { availableColorClasses } from '~/utils/constants';
 import { cn } from '~/utils/cn';
+import { Color, colorSelections } from '~/utils/constants';
+import { FormInput, LabelSchema } from '~/utils/validation';
 
 export const Route = createFileRoute(
   '/_authed/workspaces_/$workspaceId/settings',
@@ -40,6 +42,7 @@ export const Route = createFileRoute(
 function RouteComponent() {
   const workspaceId = Route.useParams().workspaceId as Id<'workspaces'>;
   const [isEditing, setIsEditing] = useState(false);
+  const [selectedColor, setSelectedColor] = useState();
 
   const { data: workspace, error } = useQuery(
     convexQuery(api.workspaces.getWorkspace, { workspaceId }),
@@ -49,20 +52,36 @@ function RouteComponent() {
     convexQuery(api.workspaces.getWorkspaceLabels, { workspaceId }),
   );
 
-  const { mutate: updateWorkspace } = useMutation({
+  const { mutate: updateWorkspace, isPending } = useMutation({
     mutationFn: useConvexMutation(api.workspaces.updateWorkspace),
   });
 
-  const handleworkspaceUpdate = (e: React.FormEvent) => {
-    e.preventDefault();
+  const { mutate: createLabel } = useMutation({
+    mutationFn: useConvexMutation(api.workspaces.createLabel),
+  });
+
+  const { mutate: deleteLabel } = useMutation({
+    mutationFn: useConvexMutation(api.workspaces.deleteLabel),
+  });
+
+  const handleworkspaceUpdate = (formData: FormInput) => {
+    if (!workspace) return;
+
+    if (
+      workspace.name === formData.name &&
+      workspace.description === formData.description &&
+      workspace.color === formData.color
+    )
+      return;
+
+    updateWorkspace({ workspaceId: workspace?._id, ...formData });
     setIsEditing(false);
-    // In a real app, you would save to backend here
-    console.log('workspace updated:', workspace);
   };
 
-  const handleAddLabel = (newLabel: { title: string; color: string }) => {};
-
-  const handleDeleteLabel = (id: string) => {};
+  const handleAddLabel = (newLabel: { name: string; color: string }) => {
+    if (!workspace) return;
+    createLabel({ workspaceId: workspace?._id, ...newLabel });
+  };
 
   if (workspace) {
     return (
@@ -70,11 +89,11 @@ function RouteComponent() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <h1 className="text-2xl font-bold tracking-tight">
+              <h1 className="text-2xl font-bold tracking-normal">
                 Workspace Settings
               </h1>
               <p className="text-muted-foreground">
-                Manage your workspace details and labels.
+                Manage details and labels.
               </p>
             </div>
           </div>
@@ -85,69 +104,20 @@ function RouteComponent() {
               <TabsTrigger value="labels">Labels</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="details" className="space-y-4">
+            <TabsContent value="details" className="space-y-4 max-w-xl">
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Workspace Information</CardTitle>
-                      <CardDescription>
-                        Update your workspace details and preferences.
-                      </CardDescription>
-                    </div>
-                    <Button
-                      variant={isEditing ? 'ghost' : 'outline'}
-                      size="sm"
-                      onClick={() => setIsEditing(!isEditing)}
-                    >
-                      {isEditing ? 'Cancel' : 'Edit'}
-                    </Button>
-                  </div>
+                  <CardTitle>{workspace.name}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <form onSubmit={handleworkspaceUpdate} className="space-y-4">
-                    <div className="space-y-2">
-                      <label htmlFor="name">Workspace Name</label>
-                      <Input
-                        id="name"
-                        value={workspace.name}
-                        disabled={!isEditing}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="description">Description</label>
-                      <Textarea
-                        id="description"
-                        rows={4}
-                        value={workspace.description}
-                        disabled={!isEditing}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label>Workspace Color</label>
-                      <div className="flex items-center gap-4">
-                        <div
-                          className={cn(
-                            'w-10 h-10 rounded-full border',
-                            workspace.color,
-                          )}
-                        />
-                        {isEditing && (
-                          <ColorPicker
-                            color={workspace.color}
-                            onChange={(color) =>
-                              console.log('Selected color:', color)
-                            }
-                          />
-                        )}
-                      </div>
-                    </div>
-                    {isEditing && (
-                      <Button type="submit" className="mt-4">
-                        Save Changes
-                      </Button>
-                    )}
-                  </form>
+                  <BoardWorkspaceForm
+                    isPending={isPending}
+                    className="[&_.color-class]:size-9"
+                    initialName={workspace.name}
+                    initialDescription={workspace.description}
+                    initialColor={workspace.color}
+                    onSubmit={(formData) => handleworkspaceUpdate(formData)}
+                  />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -161,29 +131,28 @@ function RouteComponent() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     <h3 className="text-sm font-medium">Current Labels</h3>
-                    {labels?.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">
+
+                    <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2">
+                      {labels?.map((label) => (
+                        <LabelItem
+                          key={label._id}
+                          label={label}
+                          onDelete={() =>
+                            deleteLabel({ labelId: label._id as Id<'labels'> })
+                          }
+                        />
+                      ))}
+
+                      <p className="hidden only:block text-sm text-muted-foreground">
                         No labels created yet.
                       </p>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
-                        {labels?.map((label) => (
-                          <LabelItem
-                            key={label._id}
-                            label={label}
-                            onDelete={() => handleDeleteLabel(label._id)}
-                          />
-                        ))}
-                      </div>
-                    )}
+                    </div>
                   </div>
 
                   <div className="pt-4 border-t">
-                    <h3 className="text-sm font-medium mb-4">
-                      Create New Label
-                    </h3>
+                    <h3 className="text-2xl font-medium mb-4">Create new</h3>
                     <CreateLabelForm onAddLabel={handleAddLabel} />
                   </div>
                 </CardContent>
@@ -200,57 +169,71 @@ function RouteComponent() {
   }
 
   return (
-    <div>
+    <div className="flex items-center justify-center h-1/3">
       <Spinner className="size-10" />
     </div>
   );
 }
 
 interface CreateLabelFormProps {
-  onAddLabel: (label: { title: string; color: string }) => void;
+  onAddLabel: (label: { name: string; color: string }) => void;
+  defaultColor?: Color;
+  defaultName?: string;
+  className?: string;
 }
 
-export function CreateLabelForm({ onAddLabel }: CreateLabelFormProps) {
-  const [title, setTitle] = useState('');
-  const [color, setColor] = useState('#3b82f6');
+export function CreateLabelForm({
+  onAddLabel,
+  defaultColor,
+  defaultName,
+  className,
+}: CreateLabelFormProps) {
+  const [name, setName] = useState(defaultName ?? '');
+  const [color, setColor] = useState(defaultColor ?? colorSelections[0]);
+  const isEditMode = defaultColor && defaultName;
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (title.trim()) {
-      onAddLabel({ title, color });
-      setTitle('');
-      setColor('#3b82f6');
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const result = v.safeParse(LabelSchema, { name, color: color.value });
+
+    if (result.success) {
+      onAddLabel(result.output);
+      setName('');
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <label htmlFor="label-title">Label Title</label>
+    <form
+      onSubmit={handleSubmit}
+      className={cn('flex items-end gap-4', className)}
+    >
+      <div className="space-y-1">
+        <label htmlFor="label-name">Name</label>
         <Input
-          id="label-title"
-          placeholder="Enter label title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          id="label-name"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           className="flex-1"
         />
       </div>
 
-      <div className="space-y-2">
-        <label htmlFor="label-color">Label Color</label>
+      <div className="space-y-1">
+        <label htmlFor="label-color">Color</label>
         <ColorPicker color={color} onChange={setColor} />
       </div>
 
-      <Button type="submit" disabled={!title.trim()} className="w-full">
-        Create Label
+      <Button type="submit">
+        {isEditMode ? 'Update Label' : 'Create Label'}
       </Button>
     </form>
   );
 }
 
 interface ColorPickerProps {
-  color: string | undefined;
-  onChange: (color: string) => void;
+  color: Color | undefined;
+  onChange: (color: Color) => void;
 }
 
 export function ColorPicker({ color, onChange }: ColorPickerProps) {
@@ -263,29 +246,30 @@ export function ColorPicker({ color, onChange }: ColorPickerProps) {
           variant="outline"
           className="flex items-center gap-2 w-full justify-start"
         >
-          <div className={cn('w-4 h-4 rounded-full', color)} />
+          <div className={cn('w-4 h-4 rounded-full', color?.value)} />
           <span className="capitalize">
-            {availableColorClasses.find((c) => c === color) || 'Select color'}
+            {colorSelections.find((c) => c.value === color?.value)?.name ||
+              'Select color'}
           </span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-3">
         <div className="grid grid-cols-5 gap-2">
-          {availableColorClasses.map((option) => (
+          {colorSelections.map((colorOpt) => (
             <button
-              key={option}
+              key={colorOpt.value}
               className={cn(
-                'w-8 h-8 rounded-full relative flex items-center justify-center hover:scale-110 transition-transform',
-                option,
+                'size-8 rounded-full flex items-center justify-center hover:scale-110 transition-transform',
+                colorOpt.value,
               )}
               onClick={() => {
-                onChange(option);
+                onChange(colorOpt);
                 setOpen(false);
               }}
-              title={option}
+              title={colorOpt.name}
             >
-              {option === color && (
-                <Check className="h-4 w-4 text-white drop-shadow-[0_0_1px_rgba(0,0,0,0.5)]" />
+              {colorOpt.value === color?.value && (
+                <Check className="size-4 text-white" />
               )}
             </button>
           ))}
@@ -300,27 +284,64 @@ interface LabelItemProps {
 }
 
 export function LabelItem({ label, onDelete }: LabelItemProps) {
+  const [isEditMode, setIsEditMode] = useState(false);
+
+  const { mutate: updateLabel } = useMutation({
+    mutationFn: useConvexMutation(api.workspaces.updateLabel),
+  });
+
   return (
-    <div className="flex items-center justify-between p-3 border rounded-md bg-card h-full">
-      <div className="flex items-center gap-3 overflow-hidden">
-        <div
-          className="w-4 h-4 rounded-full flex-shrink-0"
-          style={{ backgroundColor: label.color }}
-        />
-        <div className="flex items-center gap-2 overflow-hidden">
-          {/* <Tag className="h-4 w-4 text-muted-foreground flex-shrink-0" /> */}
-          <span className="font-medium truncate">{label.name}</span>
-        </div>
-      </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={onDelete}
-        className="h-8 w-8 text-muted-foreground hover:text-destructive flex-shrink-0"
-      >
-        <Trash2Icon className="h-4 w-4" />
-        <span className="sr-only">Delete label</span>
-      </Button>
+    <div
+      className={cn(
+        'flex items-center justify-between rounded-md bg-card py-1.5 pl-3 pr-1 text-white dark:text-neutral-100',
+        label.color,
+      )}
+    >
+      {label.name}
+      <DropdownMenu>
+        <DropdownMenuTrigger>
+          <MoreVerticalIcon className="size-4" />
+          <span className="sr-only">Column actions</span>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {isEditMode ? (
+            <div className="[&>*]:m-0 px-3 py-1">
+              <CreateLabelForm
+                defaultName={label.name}
+                defaultColor={colorSelections.find(
+                  (color) => color.value === label.color,
+                )}
+                onAddLabel={(data) => {
+                  updateLabel({ labelId: label._id, ...data });
+                  setIsEditMode(false);
+                }}
+              />
+            </div>
+          ) : (
+            <>
+              <DropdownMenuItem
+                onSelect={(e) => {
+                  e.preventDefault();
+                  setIsEditMode(true);
+                }}
+                className="cursor-pointer"
+              >
+                <PencilIcon className="mr-2 size-4" />
+                <span className="sr-only">Edit label</span>
+                Rename
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={onDelete}
+                className="cursor-pointer text-destructive"
+              >
+                <Trash2Icon className="mr-2 size-4" />
+                <span className="sr-only">Delete label</span>
+                Delete
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }
