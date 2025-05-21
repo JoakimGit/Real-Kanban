@@ -18,7 +18,7 @@ export const createColumn = mutation({
 export const updateColumn = mutation({
   args: {
     columnId: v.id('columns'),
-    name: v.string(),
+    name: v.optional(v.string()),
     position: v.optional(v.float64()),
   },
   handler: async (ctx, { columnId, ...updatedColumn }) => {

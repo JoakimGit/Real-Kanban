@@ -13,7 +13,7 @@ export async function deleteTaskWithRelatedData(
       .collect(),
     ctx.db
       .query('checklistItems')
-      .withIndex('by_taskId_position', (q) => q.eq('taskId', taskId))
+      .withIndex('by_taskId', (q) => q.eq('taskId', taskId))
       .collect(),
     ctx.db
       .query('taskLabels')

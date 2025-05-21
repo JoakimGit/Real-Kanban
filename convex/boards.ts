@@ -6,6 +6,7 @@ import {
   ensureIsWorkspaceOwner,
 } from './model/workspace';
 import { getManyVia } from 'convex-helpers/server/relationships';
+import { orderByPosition } from '../app/utils/order';
 
 export const createBoard = mutation({
   args: {
@@ -81,20 +82,22 @@ export const getBoardWithColumnsAndTasks = query({
     // Fetch columns for the board, ordered by position
     const columns = await ctx.db
       .query('columns')
-      .withIndex('by_board_position', (q) => q.eq('boardId', boardId))
+      .withIndex('by_boardId', (q) => q.eq('boardId', boardId))
       .collect();
+    const sortedColumns = columns.sort(orderByPosition);
 
     // Fetch tasks and related data for each column
     const columnsWithTasks = await Promise.all(
-      columns.map(async (column) => {
+      sortedColumns.map(async (column) => {
         const tasksForColumn = await ctx.db
           .query('tasks')
           .withIndex('by_columnId', (q) => q.eq('columnId', column._id))
           .collect();
+        const sortedTasks = tasksForColumn.sort(orderByPosition);
 
         // Fetch related data for tasks in parallel
         const tasksWithDetails = await Promise.all(
-          tasksForColumn.map(async (task) => {
+          sortedTasks.map(async (task) => {
             const [assignedTo, labels, checklistItems] = await Promise.all([
               (task.assignedTo
                 ? ctx.db.get(task.assignedTo)
@@ -109,9 +112,7 @@ export const getBoardWithColumnsAndTasks = query({
               ),
               ctx.db
                 .query('checklistItems')
-                .withIndex('by_taskId_position', (q) =>
-                  q.eq('taskId', task._id),
-                )
+                .withIndex('by_taskId', (q) => q.eq('taskId', task._id))
                 .collect(),
             ]);
 
@@ -119,7 +120,7 @@ export const getBoardWithColumnsAndTasks = query({
               ...task,
               assignedTo,
               labels: labels.filter(Boolean),
-              checklistItems,
+              checklistItems: checklistItems.sort(orderByPosition),
             };
           }),
         );

@@ -18,9 +18,7 @@ const columnsTable = defineTable({
   boardId: v.id('boards'),
   name: v.string(),
   position: v.float64(),
-})
-  .index('by_boardId', ['boardId'])
-  .index('by_board_position', ['boardId', 'position']);
+}).index('by_boardId', ['boardId']);
 
 const tasksTable = defineTable({
   name: v.string(),
@@ -58,7 +56,7 @@ const checklistItemsTable = defineTable({
   isComplete: v.boolean(),
   dueDate: v.optional(v.number()),
   position: v.float64(),
-}).index('by_taskId_position', ['taskId', 'position']);
+}).index('by_taskId', ['taskId']);
 
 const commentsTable = defineTable({
   taskId: v.id('tasks'),

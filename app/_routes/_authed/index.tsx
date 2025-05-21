@@ -77,7 +77,7 @@ function Home() {
               params={{ workspaceId: workspace._id }}
               key={workspace._id}
             >
-              <Card className="flex flex-col cursor-pointer transition-all hover:shadow-md">
+              <Card className="flex flex-col h-full cursor-pointer transition-all hover:shadow-md">
                 <CardHeader className="pb-2">
                   <div
                     className={`w-12 h-1.5 rounded-full mb-2 ${workspace.color}`}
