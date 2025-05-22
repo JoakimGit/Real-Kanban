@@ -41,8 +41,6 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const workspaceId = Route.useParams().workspaceId as Id<'workspaces'>;
-  const [isEditing, setIsEditing] = useState(false);
-  const [selectedColor, setSelectedColor] = useState();
 
   const { data: workspace, error } = useQuery(
     convexQuery(api.workspaces.getWorkspace, { workspaceId }),
@@ -75,7 +73,6 @@ function RouteComponent() {
       return;
 
     updateWorkspace({ workspaceId: workspace?._id, ...formData });
-    setIsEditing(false);
   };
 
   const handleAddLabel = (newLabel: { name: string; color: string }) => {
