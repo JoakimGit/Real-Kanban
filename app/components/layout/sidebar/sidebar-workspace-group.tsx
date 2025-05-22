@@ -55,7 +55,7 @@ export const AppSidebarWorkspaceGroup = ({
             >
               <SidebarMenuSubButton asChild>
                 <Link
-                  className="w-full text-foreground/70"
+                  className="w-full opacity-80"
                   to="/boards/$boardId"
                   params={{ boardId: board._id }}
                 >
