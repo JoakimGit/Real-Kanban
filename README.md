@@ -23,11 +23,12 @@
 
 - [x] create board view with columns/tasks
 - [x] modal for updating task with all its properties, including checklist items
-- [ ] implement drag & drop
+- [x] implement drag & drop
 - [ ] various actions (minimize task properties, copy task, move task, create col/task/checklistitem, deletes, etc.)
 
 4. Secondary features
 
+- [ ] filter bar in board view
 - [ ] settings pages for user/workspace/others
 - [ ] add user management (inviting users to workspace/board, role/authorization stuff)
 - [ ] add task comments
@@ -37,7 +38,7 @@
 - [ ] add notifications
 - [ ] add activity log to tasks
 - [ ] add file upload for task attachments
-- [ ] conflict resolution for 2 users updating same entity (automatic + manual)
+- [ ] conflict resolution for 2 users updating same entity at same time (automatic + manual)
 
 6. Polish
 

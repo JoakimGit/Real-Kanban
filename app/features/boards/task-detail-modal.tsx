@@ -32,7 +32,7 @@ import { Separator } from '~/components/ui/separator';
 import { Textarea } from '~/components/ui/textarea';
 import { cn } from '~/utils/cn';
 import { formatDate } from '~/utils/date';
-import { TaskWithRelatedData } from './dnd/column';
+import { TaskWithRelatedData } from './column';
 import { Calendar } from '~/components/ui/calendar';
 import { CreateLabelForm } from '~/_routes/_authed/workspaces_.$workspaceId.settings';
 import { colorSelections } from '~/utils/constants';
