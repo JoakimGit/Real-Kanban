@@ -40,4 +40,6 @@ export const ensureIsBoardMember = async (
   if (!boardFound) {
     throw new ConvexError('Unauthorized');
   }
+
+  return currentUser;
 };

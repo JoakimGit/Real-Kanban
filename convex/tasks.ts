@@ -1,4 +1,4 @@
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 import { mutation } from './_generated/server';
 import { ensureIsBoardMember } from './model/board';
 import { deleteTaskWithRelatedData } from './model/task';
@@ -48,6 +48,66 @@ export const deleteTask = mutation({
   handler: async (ctx, { taskId }) => {
     await ensureIsBoardMember(ctx, { fromTaskId: taskId });
     await deleteTaskWithRelatedData(ctx, taskId);
+  },
+});
+
+export const duplicateTask = mutation({
+  args: {
+    taskId: v.id('tasks'),
+  },
+  handler: async (ctx, { taskId }) => {
+    const user = await ensureIsBoardMember(ctx, { fromTaskId: taskId });
+    const task = await ctx.db.get(taskId);
+
+    if (!task) {
+      throw new ConvexError("Task doesn't exist");
+    }
+
+    const [taskLabels, checklistItems, comments] = await Promise.all([
+      ctx.db
+        .query('taskLabels')
+        .withIndex('by_taskId_labelId', (q) => q.eq('taskId', taskId))
+        .collect(),
+      ctx.db
+        .query('checklistItems')
+        .withIndex('by_taskId', (q) => q.eq('taskId', taskId))
+        .collect(),
+      ctx.db
+        .query('comments')
+        .withIndex('by_taskId', (q) => q.eq('taskId', taskId))
+        .collect(),
+    ]);
+
+    const { _id, createdBy, _creationTime, name, position, ...rest } = task;
+    const newTaskId = await ctx.db.insert('tasks', {
+      ...rest,
+      createdBy: user._id,
+      position: position + 0.01,
+      name: `${name} (Copy)`,
+    });
+
+    for (const taskLabel of taskLabels) {
+      await ctx.db.insert('taskLabels', {
+        taskId: newTaskId,
+        labelId: taskLabel.labelId,
+      });
+    }
+
+    for (const item of checklistItems) {
+      const { _id, _creationTime, taskId: _, ...itemData } = item;
+      await ctx.db.insert('checklistItems', {
+        ...itemData,
+        taskId: newTaskId,
+      });
+    }
+
+    for (const comment of comments) {
+      const { _id, _creationTime, taskId: _, ...commentData } = comment;
+      await ctx.db.insert('comments', {
+        ...commentData,
+        taskId: newTaskId,
+      });
+    }
   },
 });
 
