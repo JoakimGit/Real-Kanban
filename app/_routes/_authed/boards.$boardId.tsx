@@ -20,9 +20,15 @@ import {
 } from '~/features/boards/column';
 import { Task } from '~/features/boards/task';
 import TaskDetailSidebar from '~/features/boards/task-detail-modal';
-import { useTaskSidebarStore } from '~/features/boards/task-sidebar-store';
+import * as v from 'valibot';
+
+const taskSearchSchema = v.object({
+  taskId: v.optional(v.pipe(v.string(), v.length(32))),
+});
+export type TaskSearch = v.InferInput<typeof taskSearchSchema>;
 
 export const Route = createFileRoute('/_authed/boards/$boardId')({
+  validateSearch: taskSearchSchema,
   component: RouteComponent,
 });
 
@@ -33,35 +39,24 @@ type BoardQueryResult = NonNullable<
 >;
 
 function RouteComponent() {
+  const { taskId } = Route.useSearch();
   const boardId = Route.useParams().boardId as Id<'boards'>;
-  const navigate = useNavigate();
-  const { selectedTaskId, setSelectedTaskId } = useTaskSidebarStore();
+  const navigate = useNavigate({ from: Route.fullPath });
+
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
-
-  const { mutate: updateColumn } = useMutation({
-    mutationFn: useConvexMutation(api.columns.updateColumn),
-  });
-
-  const { mutate: updateTask } = useMutation({
-    mutationFn: useConvexMutation(api.tasks.updateTask),
-  });
-
-  const { mutate: createColumn } = useMutation({
-    mutationFn: useConvexMutation(api.columns.createColumn),
-  });
-
-  const { data, isPending } = useQuery(
-    convexQuery(api.boards.getBoardWithColumnsAndTasks, {
-      boardId,
-    }),
-  );
 
   const [dndColumns, setColumnOrder] = useState<Array<SortableColumn>>([]);
   const [dndTasksMap, setDndItemsMap] = useState<
     Record<Id<'columns'>, Array<TaskWithRelatedDataAndId>>
   >({});
   const previousTasks = useRef(dndTasksMap);
+
+  const { data, isPending } = useQuery(
+    convexQuery(api.boards.getBoardWithColumnsAndTasks, {
+      boardId,
+    }),
+  );
 
   useEffect(() => {
     if (data) {
@@ -81,6 +76,18 @@ function RouteComponent() {
       setColumnOrder(newColumnOrder);
     }
   }, [data]);
+
+  const { mutate: updateColumn } = useMutation({
+    mutationFn: useConvexMutation(api.columns.updateColumn),
+  });
+
+  const { mutate: updateTask } = useMutation({
+    mutationFn: useConvexMutation(api.tasks.updateTask),
+  });
+
+  const { mutate: createColumn } = useMutation({
+    mutationFn: useConvexMutation(api.columns.createColumn),
+  });
 
   if (isPending) return <div>Loading...</div>;
   if (!data) return <div>Board not found</div>;
@@ -167,7 +174,7 @@ function RouteComponent() {
     }
   };
 
-  const selectedTask = findTaskById(data.columns, selectedTaskId);
+  const selectedTask = findTaskById(data.columns, taskId);
   return (
     <div className="">
       <header className="flex items-center gap-x-3 px-1 mb-2">
@@ -258,22 +265,26 @@ function RouteComponent() {
         </div>
       </div>
       <Dialog
-        open={!!selectedTaskId}
+        open={!!taskId}
         onOpenChange={(open) => {
-          if (!open) setSelectedTaskId(null);
+          if (!open) {
+            navigate({
+              search: (prev) => ({ ...prev, taskId: undefined }),
+            });
+          }
         }}
       >
         <DialogPortal>
           <div
             role="dialog"
-            data-state={selectedTaskId ? 'open' : 'closed'}
+            data-state={taskId ? 'open' : 'closed'}
             className={taskSidebarModalClasses('p-0 border-border sm:max-w-xl')}
           >
             <SheetCloseBtn className="size-6" />
 
             {selectedTask && (
               <TaskDetailSidebar
-                key={selectedTaskId}
+                key={taskId}
                 workspaceId={data.workspaceId}
                 task={selectedTask}
                 columns={dndColumns.map((col) => ({
@@ -291,7 +302,7 @@ function RouteComponent() {
 
 function findTaskById(
   columns: BoardQueryResult['columns'],
-  taskId: Id<'tasks'> | null,
+  taskId: string | undefined,
 ) {
   if (!taskId) return null;
 
