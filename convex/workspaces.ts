@@ -19,6 +19,7 @@ export const createWorkspace = mutation({
     await ctx.db.insert('userWorkspaces', {
       userId: currentUser._id,
       workspaceId,
+      role: 'owner',
     });
 
     return workspaceId;
@@ -49,33 +50,30 @@ export const getUserWorkspaces = query({
       )
       .collect();
 
-    const workspaceIds = userOwnedWorkspaces.map((ws) => ws.workspaceId);
-    const uniqueWorkspaceIds = new Set(workspaceIds);
-
-    const userBoards = await getManyVia(
-      ctx.db,
-      'boardMembers',
-      'boardId',
-      'by_userId_boardId',
-      currentUser._id,
-      'userId',
-    );
-
-    userBoards.forEach((board) =>
-      board ? uniqueWorkspaceIds.add(board?.workspaceId) : null,
-    );
-
     const result = await Promise.all(
-      Array.from(uniqueWorkspaceIds).map(async (id) => {
-        const workspace = (await ctx.db.get(id)) as Doc<'workspaces'>;
+      userOwnedWorkspaces.map(async (ws) => {
+        const workspace = (await ctx.db.get(
+          ws.workspaceId,
+        )) as Doc<'workspaces'>;
         const boards = await getManyFrom(
           ctx.db,
           'boards',
           'by_workspaceId',
-          id,
+          ws.workspaceId,
         );
+        const memberships = await ctx.db
+          .query('userWorkspaces')
+          .withIndex('by_workspaceId', (q) =>
+            q.eq('workspaceId', ws.workspaceId),
+          )
+          .collect();
 
-        return { workspace, boards };
+        const members = await Promise.all(
+          memberships.map(async (m) => await ctx.db.get(m.userId)),
+        );
+        const filteredMembers = members.filter(Boolean);
+
+        return { workspace, boards, members: filteredMembers };
       }),
     );
 
@@ -93,85 +91,45 @@ export const getWorkspace = query({
   },
 });
 
-/* Labels */
-
-export const getWorkspaceLabels = query({
+export const inviteUserToWorkspace = mutation({
   args: {
     workspaceId: v.id('workspaces'),
+    invitedUserId: v.id('users'),
+    initialRole: v.literal('member'),
   },
-  handler: async (ctx, { workspaceId }) => {
-    await mustGetCurrentUser(ctx);
-    return await getManyFrom(ctx.db, 'labels', 'by_workspaceId', workspaceId);
-  },
-});
+  handler: async (ctx, { workspaceId, invitedUserId, initialRole }) => {
+    const currentUser = await mustGetCurrentUser(ctx);
 
-export const createLabel = mutation({
-  args: {
-    workspaceId: v.id('workspaces'),
-    name: v.string(),
-    color: v.string(),
-  },
-  handler: async (ctx, data) => {
-    await ensureIsWorkspaceOwner(ctx, data.workspaceId);
-    ctx.db.insert('labels', data);
-  },
-});
-
-export const updateLabel = mutation({
-  args: {
-    labelId: v.id('labels'),
-    name: v.optional(v.string()),
-    color: v.optional(v.string()),
-  },
-  handler: async (ctx, { labelId, color, name }) => {
-    const found = await ctx.db.get(labelId);
-
-    if (!found) {
-      throw new ConvexError('Label not found');
-    }
-    await ensureIsWorkspaceOwner(ctx, found.workspaceId);
-
-    ctx.db.patch(found._id, { color, name });
-  },
-});
-
-export const deleteLabel = mutation({
-  args: {
-    labelId: v.id('labels'),
-  },
-  handler: async (ctx, { labelId }) => {
-    const found = await ctx.db.get(labelId);
-
-    if (!found) {
-      throw new ConvexError('Label not found');
-    }
-
-    await ensureIsWorkspaceOwner(ctx, found.workspaceId);
-    ctx.db.delete(labelId);
-  },
-});
-
-export const setLabelToTask = mutation({
-  args: {
-    labelId: v.id('labels'),
-    taskId: v.id('tasks'),
-  },
-  handler: async (ctx, data) => {
-    await mustGetCurrentUser(ctx);
-
-    const existingLinks = await ctx.db
-      .query('taskLabels')
-      .withIndex('by_taskId_labelId', (q) =>
-        q.eq('taskId', data.taskId).eq('labelId', data.labelId),
+    // Verify that the current user is an owner of the workspace
+    const workspaceMembership = await ctx.db
+      .query('userWorkspaces')
+      .withIndex('by_userId_workspaceId', (q) =>
+        q.eq('userId', currentUser._id).eq('workspaceId', workspaceId),
       )
-      .collect();
+      .first();
 
-    if (existingLinks.length !== 0) {
-      for (const link of existingLinks) {
-        ctx.db.delete(link._id);
-      }
-    } else {
-      await ctx.db.insert('taskLabels', data);
+    if (workspaceMembership?.role !== 'owner') {
+      throw new ConvexError(
+        'Unauthorized: You are not an owner of this workspace.',
+      );
     }
+
+    // Prevent inviting someone already in the workspace
+    const existingMembership = await ctx.db
+      .query('userWorkspaces')
+      .withIndex('by_userId_workspaceId', (q) =>
+        q.eq('userId', invitedUserId).eq('workspaceId', workspaceId),
+      )
+      .first();
+
+    if (existingMembership) {
+      throw new ConvexError('User is already a member of this workspace.');
+    }
+
+    await ctx.db.insert('userWorkspaces', {
+      workspaceId,
+      userId: invitedUserId,
+      role: initialRole,
+    });
   },
 });
