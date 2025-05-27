@@ -6,7 +6,13 @@ import {
   query,
 } from './_generated/server';
 import { UserJSON } from '@clerk/backend';
-import { getCurrentUser, mustGetCurrentUser, userQuery } from './model/user';
+import {
+  ensureAuthenticated,
+  getCurrentUser,
+  mustGetCurrentUser,
+  User,
+  userQuery,
+} from './model/user';
 
 /** The current user, containing user preferences and Clerk user info. */
 export const currentUser = query((ctx) => getCurrentUser(ctx));
@@ -17,6 +23,13 @@ export const setColor = mutation({
   handler: async (ctx, { color }) => {
     const user = await mustGetCurrentUser(ctx);
     await ctx.db.patch(user._id, { color });
+  },
+});
+
+export const getAllUsers = query({
+  handler: async (ctx): Promise<Array<User>> => {
+    await ensureAuthenticated(ctx);
+    return await ctx.db.query('users').collect();
   },
 });
 

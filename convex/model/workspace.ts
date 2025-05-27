@@ -32,5 +32,4 @@ export const ensureIsBoardWorkspaceOwner = async (
   }
 
   await ensureIsWorkspaceOwner(ctx, board.workspaceId);
-  return board;
 };
