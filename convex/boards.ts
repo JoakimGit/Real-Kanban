@@ -16,20 +16,9 @@ export const createBoard = mutation({
     color: v.optional(v.string()),
   },
   handler: async (ctx, boardData) => {
-    const currentUser = await mustGetCurrentUser(ctx);
-
+    await mustGetCurrentUser(ctx);
     await ensureIsWorkspaceOwner(ctx, boardData.workspaceId);
-
-    const createdBoardId = await ctx.db.insert('boards', boardData);
-    console.log(
-      `Created board '${createdBoardId}' for user ${currentUser._id}`,
-    );
-    const boardMemberLink = await ctx.db.insert('boardMembers', {
-      boardId: createdBoardId,
-      userId: currentUser._id,
-    });
-    console.log(`Generated board link '${boardMemberLink}'`);
-    return createdBoardId;
+    await ctx.db.insert('boards', boardData);
   },
 });
 
@@ -38,20 +27,8 @@ export const deleteBoard = mutation({
     boardId: v.id('boards'),
   },
   handler: async (ctx, { boardId }) => {
-    const board = await ensureIsBoardWorkspaceOwner(ctx, boardId);
-
-    const boardMembersToDelete = await ctx.db
-      .query('boardMembers')
-      .withIndex('by_boardId', (q) => q.eq('boardId', board._id))
-      .collect();
-
-    // Delete each boardMembers entry
-    for (const member of boardMembersToDelete) {
-      await ctx.db.delete(member._id);
-    }
-
-    await ctx.db.delete(board._id);
-    console.log(`Deleted board and boardMember links for board: ${board._id}`);
+    await ensureIsBoardWorkspaceOwner(ctx, boardId);
+    await ctx.db.delete(boardId);
   },
 });
 
@@ -82,7 +59,7 @@ export const getBoardWithColumnsAndTasks = query({
     // Fetch columns for the board, ordered by position
     const columns = await ctx.db
       .query('columns')
-      .withIndex('by_boardId', (q) => q.eq('boardId', boardId))
+      .withIndex('by_boardId_workspaceId', (q) => q.eq('boardId', boardId))
       .collect();
     const sortedColumns = columns.sort(orderByPosition);
 
@@ -91,7 +68,9 @@ export const getBoardWithColumnsAndTasks = query({
       sortedColumns.map(async (column) => {
         const tasksForColumn = await ctx.db
           .query('tasks')
-          .withIndex('by_columnId', (q) => q.eq('columnId', column._id))
+          .withIndex('by_columnId_workspaceId', (q) =>
+            q.eq('columnId', column._id),
+          )
           .collect();
         const sortedTasks = tasksForColumn.sort(orderByPosition);
 
@@ -112,7 +91,9 @@ export const getBoardWithColumnsAndTasks = query({
               ),
               ctx.db
                 .query('checklistItems')
-                .withIndex('by_taskId', (q) => q.eq('taskId', task._id))
+                .withIndex('by_taskId_workspaceId', (q) =>
+                  q.eq('taskId', task._id),
+                )
                 .collect(),
             ]);
 

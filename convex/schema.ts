@@ -16,13 +16,15 @@ const boardsTable = defineTable({
 
 const columnsTable = defineTable({
   boardId: v.id('boards'),
+  workspaceId: v.id('workspaces'),
   name: v.string(),
   position: v.float64(),
-}).index('by_boardId', ['boardId']);
+}).index('by_boardId_workspaceId', ['boardId', 'workspaceId']);
 
 const tasksTable = defineTable({
-  name: v.string(),
   columnId: v.id('columns'),
+  workspaceId: v.id('workspaces'),
+  name: v.string(),
   position: v.float64(),
   priority: v.optional(
     v.union(
@@ -37,7 +39,7 @@ const tasksTable = defineTable({
   description: v.optional(v.string()),
   assignedTo: v.optional(v.id('users')),
   createdBy: v.string(),
-}).index('by_columnId', ['columnId']);
+}).index('by_columnId_workspaceId', ['columnId', 'workspaceId']);
 
 const labelsTable = defineTable({
   name: v.string(),
@@ -52,16 +54,17 @@ const taskLabelsTable = defineTable({
 
 const checklistItemsTable = defineTable({
   taskId: v.id('tasks'),
+  workspaceId: v.id('workspaces'),
   name: v.string(),
   isComplete: v.boolean(),
   dueDate: v.optional(v.number()),
   position: v.float64(),
-}).index('by_taskId', ['taskId']);
+}).index('by_taskId_workspaceId', ['taskId', 'workspaceId']);
 
 const commentsTable = defineTable({
   taskId: v.id('tasks'),
   text: v.string(),
-  author: v.string(),
+  author: v.id('users'),
 }).index('by_taskId', ['taskId']);
 
 const activityLogTable = defineTable({
@@ -91,14 +94,10 @@ const usersTable = defineTable({
 const userWorkspacesTable = defineTable({
   workspaceId: v.id('workspaces'),
   userId: v.id('users'),
-}).index('by_userId_workspaceId', ['userId', 'workspaceId']);
-
-const boardMembersTable = defineTable({
-  boardId: v.id('boards'),
-  userId: v.id('users'),
+  role: v.union(v.literal('owner'), v.literal('member')),
 })
-  .index('by_boardId', ['boardId'])
-  .index('by_userId_boardId', ['userId', 'boardId']);
+  .index('by_workspaceId', ['workspaceId'])
+  .index('by_userId_workspaceId', ['userId', 'workspaceId']);
 
 export default defineSchema({
   workspaces: workspacesTable,
@@ -113,5 +112,4 @@ export default defineSchema({
   notifications: notificationsTable,
   users: usersTable,
   userWorkspaces: userWorkspacesTable,
-  boardMembers: boardMembersTable,
 });

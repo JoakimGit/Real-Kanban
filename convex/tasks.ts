@@ -1,12 +1,13 @@
 import { ConvexError, v } from 'convex/values';
 import { mutation } from './_generated/server';
-import { ensureIsBoardMember } from './model/board';
+import { ensureIsWorkspaceMember } from './model/board';
 import { deleteTaskWithRelatedData } from './model/task';
 import { mustGetCurrentUser } from './model/user';
 
 export const createTask = mutation({
   args: {
     columnId: v.id('columns'),
+    workspaceId: v.id('workspaces'),
     position: v.float64(),
     name: v.string(),
   },
@@ -36,7 +37,7 @@ export const updateTask = mutation({
     assignedTo: v.optional(v.id('users')),
   },
   handler: async (ctx, { taskId, ...updatedTask }) => {
-    await ensureIsBoardMember(ctx, { fromTaskId: taskId });
+    await ensureIsWorkspaceMember(ctx, { fromTaskId: taskId });
     await ctx.db.patch(taskId, { ...updatedTask });
   },
 });
@@ -46,7 +47,7 @@ export const deleteTask = mutation({
     taskId: v.id('tasks'),
   },
   handler: async (ctx, { taskId }) => {
-    await ensureIsBoardMember(ctx, { fromTaskId: taskId });
+    await ensureIsWorkspaceMember(ctx, { fromTaskId: taskId });
     await deleteTaskWithRelatedData(ctx, taskId);
   },
 });
@@ -56,7 +57,7 @@ export const duplicateTask = mutation({
     taskId: v.id('tasks'),
   },
   handler: async (ctx, { taskId }) => {
-    const user = await ensureIsBoardMember(ctx, { fromTaskId: taskId });
+    const user = await ensureIsWorkspaceMember(ctx, { fromTaskId: taskId });
     const task = await ctx.db.get(taskId);
 
     if (!task) {
@@ -70,7 +71,7 @@ export const duplicateTask = mutation({
         .collect(),
       ctx.db
         .query('checklistItems')
-        .withIndex('by_taskId', (q) => q.eq('taskId', taskId))
+        .withIndex('by_taskId_workspaceId', (q) => q.eq('taskId', taskId))
         .collect(),
       ctx.db
         .query('comments')
@@ -117,7 +118,7 @@ export const assignUserToTask = mutation({
     assignedTo: v.id('users'),
   },
   handler: async (ctx, { taskId, assignedTo }) => {
-    await ensureIsBoardMember(ctx, { fromTaskId: taskId });
+    await ensureIsWorkspaceMember(ctx, { fromTaskId: taskId });
     await ctx.db.patch(taskId, { assignedTo });
   },
 });
@@ -128,7 +129,7 @@ export const addLabelToTask = mutation({
     labelId: v.id('labels'),
   },
   handler: async (ctx, { taskId, labelId }) => {
-    await ensureIsBoardMember(ctx, { fromTaskId: taskId });
+    await ensureIsWorkspaceMember(ctx, { fromTaskId: taskId });
     await ctx.db.insert('taskLabels', { taskId, labelId });
   },
 });
@@ -139,7 +140,7 @@ export const removeLabelFromTask = mutation({
     labelId: v.id('labels'),
   },
   handler: async (ctx, { taskId, labelId }) => {
-    await ensureIsBoardMember(ctx, { fromTaskId: taskId });
+    await ensureIsWorkspaceMember(ctx, { fromTaskId: taskId });
 
     for await (const link of ctx.db
       .query('taskLabels')
@@ -156,6 +157,7 @@ export const removeLabelFromTask = mutation({
 export const createChecklistItem = mutation({
   args: {
     taskId: v.id('tasks'),
+    workspaceId: v.id('workspaces'),
     name: v.string(),
     position: v.float64(),
   },

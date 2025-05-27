@@ -1,16 +1,17 @@
 import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
-import { ensureIsBoardMember } from './model/board';
+import { mutation } from './_generated/server';
+import { ensureIsWorkspaceMember } from './model/board';
 import { deleteTaskWithRelatedData } from './model/task';
 
 export const createColumn = mutation({
   args: {
     boardId: v.id('boards'),
+    workspaceId: v.id('workspaces'),
     name: v.string(),
     position: v.float64(),
   },
   handler: async (ctx, columnData) => {
-    await ensureIsBoardMember(ctx, { fromBoardId: columnData.boardId });
+    await ensureIsWorkspaceMember(ctx, { fromBoardId: columnData.boardId });
     await ctx.db.insert('columns', columnData);
   },
 });
@@ -22,7 +23,7 @@ export const updateColumn = mutation({
     position: v.optional(v.float64()),
   },
   handler: async (ctx, { columnId, ...updatedColumn }) => {
-    await ensureIsBoardMember(ctx, { fromColumnId: columnId });
+    await ensureIsWorkspaceMember(ctx, { fromColumnId: columnId });
     await ctx.db.patch(columnId, { ...updatedColumn });
   },
 });
@@ -32,12 +33,12 @@ export const deleteColumn = mutation({
     columnId: v.id('columns'),
   },
   handler: async (ctx, { columnId }) => {
-    await ensureIsBoardMember(ctx, { fromColumnId: columnId });
+    await ensureIsWorkspaceMember(ctx, { fromColumnId: columnId });
 
     // get all tasks in this column
     const tasksInColumn = await ctx.db
       .query('tasks')
-      .withIndex('by_columnId', (q) => q.eq('columnId', columnId))
+      .withIndex('by_columnId_workspaceId', (q) => q.eq('columnId', columnId))
       .collect();
 
     // delete each task

@@ -3,7 +3,7 @@ import { Id } from '../_generated/dataModel';
 import { QueryCtx, MutationCtx } from '../_generated/server';
 import { mustGetCurrentUser } from './user';
 
-export const ensureIsBoardMember = async (
+export const ensureIsWorkspaceMember = async (
   ctx: QueryCtx | MutationCtx,
   config: {
     fromBoardId?: Id<'boards'>;
@@ -30,14 +30,20 @@ export const ensureIsBoardMember = async (
     throw new ConvexError('Board not found');
   }
 
-  const boardFound = await ctx.db
-    .query('boardMembers')
-    .withIndex('by_userId_boardId', (q) =>
-      q.eq('userId', currentUser._id).eq('boardId', boardId),
+  const board = await ctx.db.get(boardId);
+
+  if (!board) {
+    throw new ConvexError('Board not found');
+  }
+
+  const userWorkspace = await ctx.db
+    .query('userWorkspaces')
+    .withIndex('by_userId_workspaceId', (q) =>
+      q.eq('userId', currentUser._id).eq('workspaceId', board.workspaceId),
     )
     .unique();
 
-  if (!boardFound) {
+  if (!userWorkspace) {
     throw new ConvexError('Unauthorized');
   }
 
