@@ -47,7 +47,7 @@ function RouteComponent() {
   );
 
   const { data: labels } = useQuery(
-    convexQuery(api.workspaces.getWorkspaceLabels, { workspaceId }),
+    convexQuery(api.labels.getLabelsByWorkspace, { workspaceId }),
   );
 
   const { mutate: updateWorkspace, isPending } = useMutation({
@@ -55,11 +55,11 @@ function RouteComponent() {
   });
 
   const { mutate: createLabel } = useMutation({
-    mutationFn: useConvexMutation(api.workspaces.createLabel),
+    mutationFn: useConvexMutation(api.labels.createLabel),
   });
 
   const { mutate: deleteLabel } = useMutation({
-    mutationFn: useConvexMutation(api.workspaces.deleteLabel),
+    mutationFn: useConvexMutation(api.labels.deleteLabel),
   });
 
   const handleworkspaceUpdate = (formData: FormInput) => {
@@ -284,7 +284,7 @@ export function LabelItem({ label, onDelete }: LabelItemProps) {
   const [isEditMode, setIsEditMode] = useState(false);
 
   const { mutate: updateLabel } = useMutation({
-    mutationFn: useConvexMutation(api.workspaces.updateLabel),
+    mutationFn: useConvexMutation(api.labels.updateLabel),
   });
 
   return (

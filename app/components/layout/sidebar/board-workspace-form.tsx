@@ -74,7 +74,7 @@ export const BoardWorkspaceForm = ({
           id="item-description"
           value={description ?? ''} // Use initialDescription from props as value
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Description"
+          placeholder="Description (optional)"
           maxLength={100}
           name="description"
         />

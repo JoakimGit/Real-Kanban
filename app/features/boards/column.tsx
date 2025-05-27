@@ -109,6 +109,7 @@ export const Column = ({ column, tasks, index, children }: DroppableProps) => {
 
     createTask({
       columnId: column._id,
+      workspaceId: column.workspaceId,
       position: lastTask ? lastTask.position + 1 : 0,
       name: newTaskTitle,
     });

@@ -98,6 +98,7 @@ function RouteComponent() {
 
     createColumn({
       boardId,
+      workspaceId: data.workspaceId,
       position: lastCol ? lastCol.position + 1 : 0,
       name: newColumnTitle,
     });

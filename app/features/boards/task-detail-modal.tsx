@@ -133,7 +133,7 @@ export default function TaskDetailSidebar({
   });
 
   const { data: labels } = useQuery(
-    convexQuery(api.workspaces.getWorkspaceLabels, { workspaceId }),
+    convexQuery(api.labels.getLabelsByWorkspace, { workspaceId }),
   );
 
   const handlePriorityChange = (priority: string) => {
@@ -149,6 +149,7 @@ export default function TaskDetailSidebar({
     const lastChecklistItemPosition = task.checklistItems.at(-1)?.position || 0;
     createChecklistItem({
       taskId: task._id,
+      workspaceId: task.workspaceId,
       name: newSubtaskName,
       position: lastChecklistItemPosition + 1,
     });
@@ -216,7 +217,7 @@ export default function TaskDetailSidebar({
         <DetailGroup label="Estimate">
           <BlurSubmitInput
             type="number"
-            className="shadow-none w-16"
+            className="text-sm shadow-none"
             value={task.estimate}
             placeholder="Estimate in hours"
             onBlur={(estimate) => updateTask({ taskId: task._id, estimate })}
@@ -459,15 +460,15 @@ const LabelsList = ({
   );
 
   const { mutate: createLabel } = useMutation({
-    mutationFn: useConvexMutation(api.workspaces.createLabel),
+    mutationFn: useConvexMutation(api.labels.createLabel),
   });
 
   const { mutate: updateLabel } = useMutation({
-    mutationFn: useConvexMutation(api.workspaces.updateLabel),
+    mutationFn: useConvexMutation(api.labels.updateLabel),
   });
 
   const { mutate: setLabelToTask } = useMutation({
-    mutationFn: useConvexMutation(api.workspaces.setLabelToTask),
+    mutationFn: useConvexMutation(api.labels.setLabelToTask),
   });
 
   const handleLabelSubmit = (label: LabelInput) => {
