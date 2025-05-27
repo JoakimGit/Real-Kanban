@@ -16,6 +16,7 @@ import type {
 import type * as boards from "../boards.js";
 import type * as columns from "../columns.js";
 import type * as http from "../http.js";
+import type * as labels from "../labels.js";
 import type * as model_board from "../model/board.js";
 import type * as model_task from "../model/task.js";
 import type * as model_user from "../model/user.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   boards: typeof boards;
   columns: typeof columns;
   http: typeof http;
+  labels: typeof labels;
   "model/board": typeof model_board;
   "model/task": typeof model_task;
   "model/user": typeof model_user;
