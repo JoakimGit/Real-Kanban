@@ -63,11 +63,10 @@ function RouteComponent() {
       const newDndItems: Record<string, Array<TaskWithRelatedDataAndId>> = {};
       const newColumnOrder: Array<SortableColumn> = [];
 
-      // Map Convex data to the dnd-kit format
       data.columns.forEach(({ tasks, ...column }) => {
         newDndItems[column._id] = tasks.map((task) => ({
-          id: task._id, // Map _id to id
-          ...task, // Include other task properties
+          id: task._id,
+          ...task,
         }));
         newColumnOrder.push({ id: column._id, ...column });
       });
@@ -286,7 +285,6 @@ function RouteComponent() {
             {selectedTask && (
               <TaskDetailSidebar
                 key={taskId}
-                workspaceId={data.workspaceId}
                 task={selectedTask}
                 columns={dndColumns.map((col) => ({
                   id: col._id,

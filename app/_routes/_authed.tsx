@@ -25,7 +25,7 @@ function ProtectedLayout() {
   if (!isSignedIn) {
     return (
       <div className="flex items-center justify-center p-12">
-        <SignIn routing="hash" />
+        <SignIn routing="hash" forceRedirectUrl={window.location.href} />
       </div>
     );
   }
