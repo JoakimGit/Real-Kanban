@@ -29,6 +29,7 @@ import {
 } from '~/components/ui/popover';
 import { Spinner } from '~/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs';
+import { WorkspaceMembersManager } from '~/features/workspaces/workspace-settings-members-manager';
 import { cn } from '~/utils/cn';
 import { Color, colorSelections } from '~/utils/constants';
 import { FormInput, LabelSchema } from '~/utils/validation';
@@ -82,81 +83,100 @@ function RouteComponent() {
 
   if (workspace) {
     return (
-      <div className="container mx-auto py-6 px-4 md:px-6">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <h1 className="text-2xl font-bold tracking-normal">
-                Workspace Settings
-              </h1>
-              <p className="text-muted-foreground">
-                Manage details and labels.
-              </p>
-            </div>
-          </div>
+      <div className="container mx-auto py-6 px-4 md:px-6 text-center">
+        <h1 className="text-2xl font-bold tracking-normal">
+          Workspace Settings
+        </h1>
+        <p className="text-muted-foreground mb-6">Manage details and labels.</p>
 
-          <Tabs defaultValue="details" className="space-y-4">
-            <TabsList>
-              <TabsTrigger value="details">Workspace Details</TabsTrigger>
-              <TabsTrigger value="labels">Labels</TabsTrigger>
-            </TabsList>
+        <Tabs defaultValue="details" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="details">Workspace Details</TabsTrigger>
+            <TabsTrigger value="members">Members</TabsTrigger>
+            <TabsTrigger value="labels">Labels</TabsTrigger>
+          </TabsList>
 
-            <TabsContent value="details" className="space-y-4 max-w-xl">
-              <Card>
-                <CardHeader>
-                  <CardTitle>{workspace.name}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <BoardWorkspaceForm
-                    isPending={isPending}
-                    className="[&_.color-class]:size-9"
-                    initialName={workspace.name}
-                    initialDescription={workspace.description}
-                    initialColor={workspace.color}
-                    onSubmit={(formData) => handleworkspaceUpdate(formData)}
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
+          <TabsContent
+            value="details"
+            className="space-y-4 max-w-2xl mx-auto text-left"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>{workspace.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <BoardWorkspaceForm
+                  isPending={isPending}
+                  className="[&_.color-class]:size-9"
+                  initialName={workspace.name}
+                  initialDescription={workspace.description}
+                  initialColor={workspace.color}
+                  onSubmit={(formData) => handleworkspaceUpdate(formData)}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            <TabsContent value="labels" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Labels</CardTitle>
-                  <CardDescription>
-                    Create and manage labels for your tasks.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium">Current Labels</h3>
+          <TabsContent
+            value="members"
+            className="space-y-4 max-w-2xl mx-auto text-left"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Workspace Members</CardTitle>
+                <CardDescription>
+                  Manage who has access to this workspace.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <WorkspaceMembersManager
+                  workspaceId={workspaceId}
+                  members={workspace.members}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                    <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2">
-                      {labels?.map((label) => (
-                        <LabelItem
-                          key={label._id}
-                          label={label}
-                          onDelete={() =>
-                            deleteLabel({ labelId: label._id as Id<'labels'> })
-                          }
-                        />
-                      ))}
+          <TabsContent
+            value="labels"
+            className="space-y-4 max-w-4xl mx-auto text-left"
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Labels</CardTitle>
+                <CardDescription>
+                  Create and manage labels for your tasks.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Current Labels</h3>
 
-                      <p className="hidden only:block text-sm text-muted-foreground">
-                        No labels created yet.
-                      </p>
-                    </div>
+                  <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2">
+                    {labels?.map((label) => (
+                      <LabelItem
+                        key={label._id}
+                        label={label}
+                        onDelete={() =>
+                          deleteLabel({ labelId: label._id as Id<'labels'> })
+                        }
+                      />
+                    ))}
+
+                    <p className="hidden only:block text-sm text-muted-foreground">
+                      No labels created yet.
+                    </p>
                   </div>
+                </div>
 
-                  <div className="pt-4 border-t">
-                    <h3 className="text-2xl font-medium mb-4">Create new</h3>
-                    <CreateLabelForm onAddLabel={handleAddLabel} />
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
+                <div className="pt-4 border-t">
+                  <h3 className="text-2xl font-medium mb-4">Create new</h3>
+                  <CreateLabelForm onAddLabel={handleAddLabel} />
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
     );
   }
