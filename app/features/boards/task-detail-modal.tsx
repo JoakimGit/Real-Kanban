@@ -13,7 +13,7 @@ import {
   Trash2Icon,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { TaskLabel } from '~/components/ui/badge';
+import { TaskLabel } from '~/components/ui/task-label';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import {
@@ -37,11 +37,11 @@ import { Calendar } from '~/components/ui/calendar';
 import { CreateLabelForm } from '~/_routes/_authed/workspaces_.$workspaceId.settings';
 import { colorSelections } from '~/utils/constants';
 import { LabelInput } from '~/utils/validation';
+import { getUserDisplayName } from '~/utils/user';
 
 interface TaskDetailSidebarProps {
   task: TaskWithRelatedData;
   columns: Array<{ id: string; name: string }>;
-  workspaceId: Id<'workspaces'>;
 }
 
 export const BlurSubmitInput = <T extends string | number>({
@@ -111,7 +111,6 @@ export const BlurSubmitInput = <T extends string | number>({
 export default function TaskDetailSidebar({
   task,
   columns,
-  workspaceId,
 }: TaskDetailSidebarProps) {
   const [newSubtaskName, setNewSubtaskTitle] = useState('');
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
@@ -133,7 +132,15 @@ export default function TaskDetailSidebar({
   });
 
   const { data: labels } = useQuery(
-    convexQuery(api.labels.getLabelsByWorkspace, { workspaceId }),
+    convexQuery(api.labels.getLabelsByWorkspace, {
+      workspaceId: task.workspaceId,
+    }),
+  );
+
+  const { data: members } = useQuery(
+    convexQuery(api.workspaces.getWorkspaceMembers, {
+      workspaceId: task.workspaceId,
+    }),
   );
 
   const handlePriorityChange = (priority: string) => {
@@ -182,7 +189,7 @@ export default function TaskDetailSidebar({
                 >
                   <LabelsList
                     labels={labels ?? []}
-                    workspaceId={workspaceId}
+                    workspaceId={task.workspaceId}
                     taskId={task._id}
                     taskLabels={task.labels}
                   />
@@ -230,25 +237,41 @@ export default function TaskDetailSidebar({
           <DetailGroup label="Assigned To">
             <Select
               value={task.assignedTo?._id}
-              onValueChange={(val) =>
+              onValueChange={(val) => {
+                console.log({ val });
                 updateTask({
                   taskId: task._id,
-                  assignedTo: val as Id<'users'>,
-                })
-              }
+                  assignedTo: val === 'UNASSIGN' ? null : (val as Id<'users'>),
+                });
+              }}
             >
               <SelectTrigger className="capitalize [&>span]:pr-1">
                 <SelectValue placeholder="Assign user.." />
               </SelectTrigger>
               <SelectContent>
-                {/* <SelectItem
-                  key={task.assignedTo?._id}
-                  value={task.assignedTo?._id}
-                  className="capitalize"
-                >
-                  {getUserDisplayName(task.assignedTo?.clerkUser)}
-                </SelectItem> */}
-                {/* TODO - Fetch all users for the board */}
+                {members ? (
+                  <>
+                    {task.assignedTo && (
+                      <SelectItem
+                        value="UNASSIGN"
+                        className="capitalize cursor-pointer text-muted-foreground"
+                      >
+                        Unassign user
+                      </SelectItem>
+                    )}
+                    {members.map((member) => (
+                      <SelectItem
+                        key={member._id}
+                        value={member._id}
+                        className="capitalize cursor-pointer"
+                      >
+                        {getUserDisplayName(member.clerkUser)}
+                      </SelectItem>
+                    ))}
+                  </>
+                ) : (
+                  <div className="text-sm">Loading..</div>
+                )}
               </SelectContent>
             </Select>
           </DetailGroup>
