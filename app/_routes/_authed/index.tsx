@@ -20,6 +20,7 @@ import {
   PopoverTrigger,
 } from '~/components/ui/popover';
 import { Spinner } from '~/components/ui/spinner';
+import { WorkspaceMembersList } from '~/features/workspaces/workspace-members-list';
 
 export const Route = createFileRoute('/_authed/')({
   component: Home,
@@ -71,13 +72,16 @@ function Home() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {workspaces?.map(({ workspace, boards }) => (
-            <Link
-              to="/workspaces/$workspaceId"
-              params={{ workspaceId: workspace._id }}
+          {workspaces?.map(({ workspace, boards, members }) => (
+            <Card
+              className="flex flex-col h-full transition-all hover:shadow-md"
               key={workspace._id}
             >
-              <Card className="flex flex-col h-full cursor-pointer transition-all hover:shadow-md">
+              <Link
+                to="/workspaces/$workspaceId"
+                params={{ workspaceId: workspace._id }}
+                className="h-full"
+              >
                 <CardHeader className="pb-2">
                   <div
                     className={`w-12 h-1.5 rounded-full mb-2 ${workspace.color}`}
@@ -88,13 +92,15 @@ function Home() {
                 <CardContent className="text-sm text-muted-foreground grow">
                   <p>{boards.length} boards</p>
                 </CardContent>
-                <CardFooter className="border-t pt-4">
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <span>7 members</span> {/* TODO - get actual members */}
-                  </div>
-                </CardFooter>
-              </Card>
-            </Link>
+              </Link>
+
+              <CardFooter className="border-t pt-4">
+                <WorkspaceMembersList
+                  workspaceId={workspace._id}
+                  members={members}
+                />
+              </CardFooter>
+            </Card>
           ))}
 
           <div className="hidden only:block">
