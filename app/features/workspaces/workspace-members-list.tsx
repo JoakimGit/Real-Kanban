@@ -13,6 +13,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '~/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '~/components/ui/select';
 import { getUserDisplayName } from '~/utils/user';
 
 interface WorkspaceMembersProps {
@@ -25,6 +32,9 @@ export function WorkspaceMembersList({
   members,
 }: WorkspaceMembersProps) {
   const [search, setSearch] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'owner' | 'member'>(
+    'member',
+  );
 
   const { data: allUsers } = useQuery(convexQuery(api.users.getAllUsers, {}));
 
@@ -88,6 +98,20 @@ export function WorkspaceMembersList({
               onChange={(e) => setSearch(e.target.value.toLowerCase())}
               className="mb-2"
             />
+            <Select
+              value={selectedRole}
+              onValueChange={(value) =>
+                setSelectedRole(value as 'owner' | 'member')
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="member">Add as Member</SelectItem>
+                <SelectItem value="owner">Add as Owner</SelectItem>
+              </SelectContent>
+            </Select>
             <div className="space-y-2 max-h-[300px] overflow-y-auto">
               {filteredUsers?.map((user) => (
                 <Button
@@ -98,7 +122,7 @@ export function WorkspaceMembersList({
                     inviteUser({
                       workspaceId,
                       invitedUserId: user._id,
-                      initialRole: 'member',
+                      initialRole: selectedRole,
                     });
                   }}
                 >

@@ -3,7 +3,12 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { api } from 'convex/_generated/api';
 import { Id } from 'convex/_generated/dataModel';
 import { User } from 'convex/model/user';
-import { MoreVerticalIcon, PlusIcon, Trash2Icon } from 'lucide-react';
+import {
+  ArrowUpDownIcon,
+  MoreVerticalIcon,
+  PlusIcon,
+  Trash2Icon,
+} from 'lucide-react';
 import { useState } from 'react';
 import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
 import { Button } from '~/components/ui/button';
@@ -19,6 +24,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '~/components/ui/popover';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '~/components/ui/select';
 import { TaskLabel } from '~/components/ui/task-label';
 import { cn } from '~/utils/cn';
 import { getUserDisplayName } from '~/utils/user';
@@ -33,6 +45,9 @@ export function WorkspaceMembersManager({
   members,
 }: WorkspaceMembersManagerProps) {
   const [search, setSearch] = useState('');
+  const [selectedRole, setSelectedRole] = useState<'owner' | 'member'>(
+    'member',
+  );
 
   const { data: allUsers } = useQuery(convexQuery(api.users.getAllUsers, {}));
 
@@ -42,6 +57,10 @@ export function WorkspaceMembersManager({
 
   const { mutate: removeUser } = useMutation({
     mutationFn: useConvexMutation(api.workspaces.removeUserFromWorkspace),
+  });
+
+  const { mutate: updateRole } = useMutation({
+    mutationFn: useConvexMutation(api.workspaces.updateUserWorkspaceRole),
   });
 
   const nonMembers = allUsers?.filter(
@@ -74,6 +93,20 @@ export function WorkspaceMembersManager({
                 onChange={(e) => setSearch(e.target.value)}
                 className="mb-2"
               />
+              <Select
+                value={selectedRole}
+                onValueChange={(value) =>
+                  setSelectedRole(value as 'owner' | 'member')
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="member">Add as Member</SelectItem>
+                  <SelectItem value="owner">Add as Owner</SelectItem>
+                </SelectContent>
+              </Select>
               <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {filteredNonMembers?.map((user) => (
                   <Button
@@ -84,7 +117,7 @@ export function WorkspaceMembersManager({
                       inviteUser({
                         workspaceId,
                         invitedUserId: user._id,
-                        initialRole: 'member',
+                        initialRole: selectedRole,
                       });
                     }}
                   >
@@ -154,10 +187,23 @@ export function WorkspaceMembersManager({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
-                  <MoreVerticalIcon className="h-4 w-4" />
+                  <MoreVerticalIcon className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={() =>
+                    updateRole({
+                      workspaceId,
+                      userId: user._id,
+                      role: role === 'owner' ? 'member' : 'owner',
+                    })
+                  }
+                  className="cursor-pointer"
+                >
+                  <ArrowUpDownIcon className="mr-2 size-4" />
+                  {role === 'owner' ? 'Make Member' : 'Make Owner'}
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() =>
                     removeUser({
@@ -167,7 +213,7 @@ export function WorkspaceMembersManager({
                   }
                   className="text-destructive cursor-pointer"
                 >
-                  <Trash2Icon className="mr-2 h-4 w-4" />
+                  <Trash2Icon className="mr-2 size-4" />
                   Remove from workspace
                 </DropdownMenuItem>
               </DropdownMenuContent>

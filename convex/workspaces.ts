@@ -1,9 +1,20 @@
+import { getManyFrom } from 'convex-helpers/server/relationships';
 import { ConvexError, v } from 'convex/values';
-import { mutation, query } from './_generated/server';
-import { mustGetCurrentUser } from './model/user';
-import { getManyFrom, getManyVia } from 'convex-helpers/server/relationships';
 import { Doc } from './_generated/dataModel';
-import { ensureIsWorkspaceOwner } from './model/workspace';
+import { mutation, query } from './_generated/server';
+import { mustGetCurrentUser, User } from './model/user';
+import {
+  ensureIsWorkspaceMember,
+  ensureIsWorkspaceOwner,
+} from './model/workspace';
+
+type WorkspaceModel = {
+  workspace: Doc<'workspaces'>;
+  boards: Array<Doc<'boards'>>;
+  members: Array<User>;
+};
+
+export type WorkspaceRole = Doc<'userWorkspaces'>['role'];
 
 export const createWorkspace = mutation({
   args: {
@@ -39,11 +50,21 @@ export const updateWorkspace = mutation({
   },
 });
 
+export const deleteWorkspace = mutation({
+  args: {
+    workspaceId: v.id('workspaces'),
+  },
+  handler: async (ctx, { workspaceId }) => {
+    await ensureIsWorkspaceOwner(ctx, workspaceId);
+    await ctx.db.delete(workspaceId);
+  },
+});
+
 export const getUserWorkspaces = query({
   handler: async (ctx) => {
     const currentUser = await mustGetCurrentUser(ctx);
 
-    const userOwnedWorkspaces = await ctx.db
+    const workspaceMemberships = await ctx.db
       .query('userWorkspaces')
       .withIndex('by_userId_workspaceId', (q) =>
         q.eq('userId', currentUser._id),
@@ -51,10 +72,8 @@ export const getUserWorkspaces = query({
       .collect();
 
     const result = await Promise.all(
-      userOwnedWorkspaces.map(async (ws) => {
-        const workspace = (await ctx.db.get(
-          ws.workspaceId,
-        )) as Doc<'workspaces'>;
+      workspaceMemberships.map(async (ws) => {
+        const workspace = await ctx.db.get(ws.workspaceId);
         const boards = await getManyFrom(
           ctx.db,
           'boards',
@@ -71,13 +90,13 @@ export const getUserWorkspaces = query({
         const members = await Promise.all(
           memberships.map(async (m) => await ctx.db.get(m.userId)),
         );
-        const filteredMembers = members.filter(Boolean);
 
-        return { workspace, boards, members: filteredMembers };
+        return { workspace, boards, members: members.filter(Boolean) };
       }),
     );
 
-    return result;
+    const filteredResult = result.filter((wsModel) => !!wsModel.workspace);
+    return filteredResult as Array<WorkspaceModel>;
   },
 });
 
@@ -86,8 +105,94 @@ export const getWorkspace = query({
     workspaceId: v.id('workspaces'),
   },
   handler: async (ctx, { workspaceId }) => {
-    await mustGetCurrentUser(ctx);
-    return await ctx.db.get(workspaceId);
+    await ensureIsWorkspaceMember(ctx, workspaceId);
+    const workspace = await ctx.db.get(workspaceId);
+
+    if (!workspace) return null;
+
+    const memberships = await ctx.db
+      .query('userWorkspaces')
+      .withIndex('by_workspaceId', (q) => q.eq('workspaceId', workspaceId))
+      .collect();
+
+    const members = await Promise.all(
+      memberships.map(async (m) => ({
+        user: await ctx.db.get(m.userId),
+        role: m.role,
+      })),
+    );
+
+    return {
+      ...workspace,
+      members: members.filter((m) => m.user !== null) as Array<{
+        user: User;
+        role: Doc<'userWorkspaces'>['role'];
+      }>,
+    };
+  },
+});
+
+export const getWorkspaceMembers = query({
+  args: {
+    workspaceId: v.id('workspaces'),
+  },
+  handler: async (ctx, { workspaceId }) => {
+    await ensureIsWorkspaceMember(ctx, workspaceId);
+    const workspace = await ctx.db.get(workspaceId);
+
+    if (!workspace) return null;
+
+    const memberships = await ctx.db
+      .query('userWorkspaces')
+      .withIndex('by_workspaceId', (q) => q.eq('workspaceId', workspaceId))
+      .collect();
+
+    const members = await Promise.all(
+      memberships.map(async (m) => await ctx.db.get(m.userId)),
+    );
+
+    return members.filter(Boolean);
+  },
+});
+
+export const getWorkspaceRole = query({
+  args: {
+    workspaceId: v.id('workspaces'),
+  },
+  handler: async (ctx, { workspaceId }) => {
+    const user = await mustGetCurrentUser(ctx);
+
+    const membership = await ctx.db
+      .query('userWorkspaces')
+      .withIndex('by_userId_workspaceId', (q) =>
+        q.eq('userId', user._id).eq('workspaceId', workspaceId),
+      )
+      .first();
+
+    if (!membership) return null;
+
+    return membership.role;
+  },
+});
+
+export const getWorkspacesWithRole = query({
+  handler: async (ctx) => {
+    const user = await mustGetCurrentUser(ctx);
+
+    const memberships = await ctx.db
+      .query('userWorkspaces')
+      .withIndex('by_userId_workspaceId', (q) => q.eq('userId', user._id))
+      .collect();
+
+    return memberships.reduce(
+      (map, { workspaceId, role }) => {
+        if (!map[workspaceId]) {
+          map[workspaceId] = role;
+        }
+        return map;
+      },
+      {} as Record<string, Doc<'userWorkspaces'>['role']>,
+    );
   },
 });
 
@@ -95,24 +200,10 @@ export const inviteUserToWorkspace = mutation({
   args: {
     workspaceId: v.id('workspaces'),
     invitedUserId: v.id('users'),
-    initialRole: v.literal('member'),
+    initialRole: v.union(v.literal('member'), v.literal('owner')),
   },
   handler: async (ctx, { workspaceId, invitedUserId, initialRole }) => {
-    const currentUser = await mustGetCurrentUser(ctx);
-
-    // Verify that the current user is an owner of the workspace
-    const workspaceMembership = await ctx.db
-      .query('userWorkspaces')
-      .withIndex('by_userId_workspaceId', (q) =>
-        q.eq('userId', currentUser._id).eq('workspaceId', workspaceId),
-      )
-      .first();
-
-    if (workspaceMembership?.role !== 'owner') {
-      throw new ConvexError(
-        'Unauthorized: You are not an owner of this workspace.',
-      );
-    }
+    await ensureIsWorkspaceOwner(ctx, workspaceId);
 
     // Prevent inviting someone already in the workspace
     const existingMembership = await ctx.db
@@ -131,5 +222,78 @@ export const inviteUserToWorkspace = mutation({
       userId: invitedUserId,
       role: initialRole,
     });
+  },
+});
+
+export const removeUserFromWorkspace = mutation({
+  args: {
+    workspaceId: v.id('workspaces'),
+    userId: v.id('users'),
+  },
+  handler: async (ctx, { workspaceId, userId }) => {
+    await ensureIsWorkspaceOwner(ctx, workspaceId);
+
+    // Don't allow removing the last owner
+    const ownersOfWorkspace = await ctx.db
+      .query('userWorkspaces')
+      .withIndex('by_workspaceId', (q) => q.eq('workspaceId', workspaceId))
+      .filter((q) => q.eq(q.field('role'), 'owner'))
+      .collect();
+
+    if (
+      ownersOfWorkspace.length === 1 &&
+      ownersOfWorkspace[0].userId === userId
+    ) {
+      throw new ConvexError('Cannot remove the last owner of a workspace');
+    }
+
+    // Remove the user from the workspace
+    const userWorkspaceToRemove = await ctx.db
+      .query('userWorkspaces')
+      .withIndex('by_userId_workspaceId', (q) =>
+        q.eq('userId', userId).eq('workspaceId', workspaceId),
+      )
+      .unique();
+
+    if (userWorkspaceToRemove) {
+      await ctx.db.delete(userWorkspaceToRemove._id);
+    }
+  },
+});
+
+export const updateUserWorkspaceRole = mutation({
+  args: {
+    workspaceId: v.id('workspaces'),
+    userId: v.id('users'),
+    role: v.union(v.literal('owner'), v.literal('member')),
+  },
+  handler: async (ctx, { workspaceId, userId, role }) => {
+    await ensureIsWorkspaceOwner(ctx, workspaceId);
+
+    // Don't allow removing the last owner
+    if (role === 'member') {
+      const owners = await ctx.db
+        .query('userWorkspaces')
+        .withIndex('by_workspaceId', (q) => q.eq('workspaceId', workspaceId))
+        .filter((q) => q.eq(q.field('role'), 'owner'))
+        .collect();
+
+      if (owners.length === 1 && owners[0].userId === userId) {
+        throw new ConvexError('Cannot demote the last owner of a workspace');
+      }
+    }
+
+    // Update the role
+    const targetMembership = await ctx.db
+      .query('userWorkspaces')
+      .withIndex('by_userId_workspaceId', (q) =>
+        q.eq('userId', userId).eq('workspaceId', workspaceId),
+      )
+      .unique();
+
+    if (!targetMembership)
+      throw new ConvexError('User is not workspace member');
+
+    await ctx.db.patch(targetMembership._id, { role });
   },
 });
