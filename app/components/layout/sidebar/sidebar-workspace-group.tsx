@@ -9,6 +9,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
 } from '~/components/ui/sidebar';
+import { useWorkspacePermission } from '~/utils/auth';
 import { cn } from '~/utils/cn';
 import { AppSidebarBoardDropdown } from './sidebar-board-dropdown';
 import { AppSidebarWorkspaceDropdown } from './sidebar-workspace-dropdown';
@@ -36,6 +37,7 @@ export const AppSidebarWorkspaceGroup = ({
     }
   }, [pathname]);
 
+  const isOwner = useWorkspacePermission(workspace._id, 'owner');
   return (
     <SidebarMenuItem>
       <div className="flex items-center group/ws">
@@ -43,7 +45,7 @@ export const AppSidebarWorkspaceGroup = ({
           <ChevronRight className={cn('size-5', isOpen && 'rotate-90')} />{' '}
           <span className="text-lg">{workspace.name}</span>
         </SidebarMenuButton>
-        <AppSidebarWorkspaceDropdown workspace={workspace} />
+        {isOwner && <AppSidebarWorkspaceDropdown workspace={workspace} />}
       </div>
 
       {isOpen && boards.length ? (
@@ -63,7 +65,7 @@ export const AppSidebarWorkspaceGroup = ({
                 </Link>
               </SidebarMenuSubButton>
 
-              <AppSidebarBoardDropdown board={board} />
+              {isOwner && <AppSidebarBoardDropdown board={board} />}
             </SidebarMenuSubItem>
           ))}
         </SidebarMenuSub>

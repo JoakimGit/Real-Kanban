@@ -30,6 +30,7 @@ import {
 import { Spinner } from '~/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '~/components/ui/tabs';
 import { WorkspaceMembersManager } from '~/features/workspaces/workspace-settings-members-manager';
+import { useWorkspacePermission } from '~/utils/auth';
 import { cn } from '~/utils/cn';
 import { Color, colorSelections } from '~/utils/constants';
 import { FormInput, LabelSchema } from '~/utils/validation';
@@ -42,6 +43,8 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const workspaceId = Route.useParams().workspaceId as Id<'workspaces'>;
+
+  const isOwner = useWorkspacePermission(workspaceId, 'owner');
 
   const { data: workspace, error } = useQuery(
     convexQuery(api.workspaces.getWorkspace, { workspaceId }),
@@ -80,6 +83,8 @@ function RouteComponent() {
     if (!workspace) return;
     createLabel({ workspaceId: workspace?._id, ...newLabel });
   };
+
+  if (!isOwner) return <div>Missing owner permissions</div>;
 
   if (workspace) {
     return (

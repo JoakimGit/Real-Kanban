@@ -3,7 +3,7 @@ import { UniqueIdentifier } from '@dnd-kit/abstract';
 import { move } from '@dnd-kit/helpers';
 import { DragDropEvents, DragDropProvider } from '@dnd-kit/react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { api } from 'convex/_generated/api';
 import { Id } from 'convex/_generated/dataModel';
 import { FunctionReturnType } from 'convex/server';
@@ -30,6 +30,15 @@ export type TaskSearch = v.InferInput<typeof taskSearchSchema>;
 export const Route = createFileRoute('/_authed/boards/$boardId')({
   validateSearch: taskSearchSchema,
   component: RouteComponent,
+  beforeLoad: async ({ context: { queryClient }, params: { boardId } }) => {
+    const board = await queryClient.ensureQueryData(
+      convexQuery(api.boards.getBoardWithColumnsAndTasks, {
+        boardId: boardId as Id<'boards'>,
+      }),
+    );
+
+    if (!board) return redirect({ to: '/' });
+  },
 });
 
 type SortableItemWithPosition = { id: UniqueIdentifier; position: number };

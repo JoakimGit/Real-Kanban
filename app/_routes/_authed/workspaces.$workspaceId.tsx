@@ -1,6 +1,11 @@
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  Link,
+  redirect,
+  useNavigate,
+} from '@tanstack/react-router';
 import { api } from 'convex/_generated/api';
 import { ArrowLeft, PlusIcon } from 'lucide-react';
 import { BoardWorkspaceForm } from '~/components/layout/sidebar/board-workspace-form';
@@ -9,7 +14,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '~/components/ui/card';
@@ -20,8 +24,18 @@ import {
   PopoverTrigger,
 } from '~/components/ui/popover';
 import { Spinner } from '~/components/ui/spinner';
+import { useWorkspacePermission } from '~/utils/auth';
 
 export const Route = createFileRoute('/_authed/workspaces/$workspaceId')({
+  beforeLoad: async ({ context, params: { workspaceId } }) => {
+    const workspaces = await context.queryClient.ensureQueryData(
+      convexQuery(api.workspaces.getUserWorkspaces, {}),
+    );
+    const currentWs = workspaces.filter(
+      (ws) => ws.workspace._id === workspaceId,
+    );
+    if (!currentWs) return redirect({ to: '/' });
+  },
   component: RouteComponent,
 });
 
@@ -36,11 +50,12 @@ function RouteComponent() {
   const { data: workspaceModel, isPending } = useQuery({
     ...convexQuery(api.workspaces.getUserWorkspaces, {}),
     select: (workspaces) =>
-      workspaces.find((ws) => ws.workspace._id === workspaceId),
+      workspaces.find((ws) => ws.workspace?._id === workspaceId),
   });
 
   const goBack = () => navigate({ to: '/' });
 
+  const isOwner = useWorkspacePermission(workspaceId, 'owner');
   const { workspace, boards } = workspaceModel || {};
 
   if (workspace) {
@@ -60,31 +75,33 @@ function RouteComponent() {
             </p>
           </div>
 
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button className="ml-auto" variant="accent">
-                <PlusIcon className="mr-2 h-4 w-4" />
-                New Board
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent
-              className="ml-5 space-y-4"
-              align="start"
-              side="left"
-            >
-              <h2 className="text-lg text-center">Add Workspace</h2>
-
-              <BoardWorkspaceForm
-                onSubmit={(formData) =>
-                  createBoard({ workspaceId: workspace._id, ...formData })
-                }
+          {isOwner && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button className="ml-auto" variant="accent">
+                  <PlusIcon className="mr-2 h-4 w-4" />
+                  New Board
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent
+                className="ml-5 space-y-4"
+                align="start"
+                side="left"
               >
-                <PopoverClose asChild>
-                  <Button type="submit">Create</Button>
-                </PopoverClose>
-              </BoardWorkspaceForm>
-            </PopoverContent>
-          </Popover>
+                <h2 className="text-lg text-center">Add Workspace</h2>
+
+                <BoardWorkspaceForm
+                  onSubmit={(formData) =>
+                    createBoard({ workspaceId: workspace._id, ...formData })
+                  }
+                >
+                  <PopoverClose asChild>
+                    <Button type="submit">Create</Button>
+                  </PopoverClose>
+                </BoardWorkspaceForm>
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -103,16 +120,10 @@ function RouteComponent() {
                     className={`w-12 h-1.5 rounded-full mb-2 ${board.color}`}
                   />
                   <CardTitle>{board.name}</CardTitle>
-                  <CardDescription>{board.description}</CardDescription>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground grow">
-                  <p>23 cards</p> {/* TODO - get cards count */}
+                  <CardDescription>{board.description}</CardDescription>
                 </CardContent>
-                <CardFooter className="border-t pt-4">
-                  <div className="flex items-center text-sm text-muted-foreground">
-                    <span>12 members</span> {/* TODO - get actual members */}
-                  </div>
-                </CardFooter>
               </Card>
             </Link>
           ))}
