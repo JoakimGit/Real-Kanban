@@ -1,10 +1,18 @@
-import { createFileRoute, Outlet } from '@tanstack/react-router';
 import { SignIn, useAuth } from '@clerk/tanstack-react-start';
-import { AppSidebar } from '~/components/layout/sidebar/app-sidebar';
+import { convexQuery } from '@convex-dev/react-query';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { createFileRoute, Outlet } from '@tanstack/react-router';
+import { api } from 'convex/_generated/api';
 import { HeaderBar } from '~/components/layout/header-bar';
-import { SidebarProvider, SidebarInset } from '~/components/ui/sidebar';
+import { AppSidebar } from '~/components/layout/sidebar/app-sidebar';
+import { SidebarInset, SidebarProvider } from '~/components/ui/sidebar';
 
 export const Route = createFileRoute('/_authed')({
+  loader: async ({ context }) => {
+    context.queryClient.ensureQueryData(
+      convexQuery(api.workspaces.getWorkspacesWithRole, {}),
+    );
+  },
   errorComponent: ({ error }) => {
     if (error.message === 'Not authenticated') {
       return (
@@ -21,6 +29,7 @@ export const Route = createFileRoute('/_authed')({
 
 function ProtectedLayout() {
   const { isSignedIn } = useAuth();
+  useSuspenseQuery(convexQuery(api.workspaces.getWorkspacesWithRole, {}));
 
   if (!isSignedIn) {
     return (
