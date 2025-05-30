@@ -1,17 +1,20 @@
 import { useConvexMutation } from '@convex-dev/react-query';
 import { useSortable } from '@dnd-kit/react/sortable';
 import { useMutation } from '@tanstack/react-query';
+import { getRouteApi } from '@tanstack/react-router';
 import { api } from 'convex/_generated/api';
 import { Doc } from 'convex/_generated/dataModel';
 import {
   AlignLeftIcon,
   CalendarIcon,
   CheckSquareIcon,
+  CopyIcon,
+  LinkIcon,
   MoreHorizontalIcon,
   Trash2Icon,
   UserIcon,
 } from 'lucide-react';
-import { TaskLabel } from '~/components/ui/badge';
+import { TaskLabel } from '~/components/ui/task-label';
 import { Button } from '~/components/ui/button';
 import {
   Card,
@@ -28,7 +31,6 @@ import {
 import { cn } from '~/utils/cn';
 import { formatDate } from '~/utils/date';
 import { getUserDisplayName } from '~/utils/user';
-import { useTaskSidebarStore } from './task-sidebar-store';
 import { TaskWithRelatedData } from './column';
 
 type TaskProps = {
@@ -37,7 +39,12 @@ type TaskProps = {
   index: number;
 };
 
+const route = getRouteApi('/_authed/boards/$boardId');
+
 export const Task = ({ columnId, task, index }: TaskProps) => {
+  const navigate = route.useNavigate();
+  const { taskId } = route.useSearch();
+
   const { ref, isDragging } = useSortable({
     id: task._id,
     index,
@@ -47,11 +54,44 @@ export const Task = ({ columnId, task, index }: TaskProps) => {
     data: { columnId },
   });
 
-  const setSelectedTask = useTaskSidebarStore((s) => s.setSelectedTaskId);
-
   const { mutate: deleteTask } = useMutation({
     mutationFn: useConvexMutation(api.tasks.deleteTask),
   });
+
+  const { mutate: duplicateTask } = useMutation({
+    mutationFn: useConvexMutation(api.tasks.duplicateTask),
+  });
+
+  const handleTaskSelect = () => {
+    navigate({
+      search: (prev) => ({ ...prev, taskId: task._id }),
+    });
+  };
+
+  const copyTaskUrl = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    e.stopPropagation();
+    const url = new URL(window.location.href);
+    url.searchParams.set('taskId', task._id);
+    navigator.clipboard.writeText(url.toString());
+  };
+
+  const handleDeleteTask = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+  ) => {
+    e.stopPropagation();
+    deleteTask(
+      { taskId: task._id },
+      {
+        onSuccess: () => {
+          if (taskId === task._id) {
+            navigate({
+              search: (prev) => ({ ...prev, taskId: undefined }),
+            });
+          }
+        },
+      },
+    );
+  };
 
   const shouldShowFooter =
     task.checklistItems.length !== 0 ||
@@ -62,7 +102,7 @@ export const Task = ({ columnId, task, index }: TaskProps) => {
       ref={ref}
       data-dragging={isDragging}
       className="mb-3 hover:border-primary transition-colors overflow-hidden"
-      onClick={() => setSelectedTask(task._id)}
+      onClick={handleTaskSelect}
     >
       <CardHeader className="p-3 pb-0 space-y-0 flex flex-row gap-x-2 justify-between">
         <h3 className="font-medium self-center text-sm line-clamp-2">
@@ -81,7 +121,20 @@ export const Task = ({ columnId, task, index }: TaskProps) => {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
-                onSelect={() => deleteTask({ taskId: task._id })}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  duplicateTask({ taskId: task._id });
+                }}
+              >
+                <CopyIcon className="mr-2 size-4" />
+                Duplicate
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={copyTaskUrl}>
+                <LinkIcon className="mr-2 size-4" />
+                Copy url
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleDeleteTask}
                 className="text-destructive"
               >
                 <Trash2Icon className="mr-2 size-4" />
