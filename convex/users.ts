@@ -1,30 +1,15 @@
-import { v } from 'convex/values';
-import {
-  internalMutation,
-  internalQuery,
-  mutation,
-  query,
-} from './_generated/server';
 import { UserJSON } from '@clerk/backend';
+import { v } from 'convex/values';
+import { internalMutation, internalQuery, query } from './_generated/server';
 import {
   ensureAuthenticated,
   getCurrentUser,
-  mustGetCurrentUser,
   User,
   userQuery,
 } from './model/user';
 
 /** The current user, containing user preferences and Clerk user info. */
 export const currentUser = query((ctx) => getCurrentUser(ctx));
-
-/** Set the user preference of the color of their text. */
-export const setColor = mutation({
-  args: { color: v.string() },
-  handler: async (ctx, { color }) => {
-    const user = await mustGetCurrentUser(ctx);
-    await ctx.db.patch(user._id, { color });
-  },
-});
 
 export const getAllUsers = query({
   handler: async (ctx): Promise<Array<User>> => {
@@ -50,9 +35,7 @@ export const updateOrCreateUser = internalMutation({
     const userRecord = await userQuery(ctx, clerkUser.id);
 
     if (userRecord === null) {
-      const colors = ['red', 'green', 'blue'];
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      await ctx.db.insert('users', { clerkUser, color });
+      await ctx.db.insert('users', { clerkUser });
     } else {
       await ctx.db.patch(userRecord._id, { clerkUser });
     }

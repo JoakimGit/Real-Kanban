@@ -1,12 +1,13 @@
+import { getManyVia } from 'convex-helpers/server/relationships';
 import { v } from 'convex/values';
+import { orderByPosition } from '../app/utils/order';
 import { mutation, query } from './_generated/server';
-import { mustGetCurrentUser, User } from './model/user';
+import { User } from './model/user';
 import {
   ensureIsBoardWorkspaceOwner,
+  ensureIsWorkspaceMember,
   ensureIsWorkspaceOwner,
 } from './model/workspace';
-import { getManyVia } from 'convex-helpers/server/relationships';
-import { orderByPosition } from '../app/utils/order';
 
 export const createBoard = mutation({
   args: {
@@ -16,7 +17,6 @@ export const createBoard = mutation({
     color: v.optional(v.string()),
   },
   handler: async (ctx, boardData) => {
-    await mustGetCurrentUser(ctx);
     await ensureIsWorkspaceOwner(ctx, boardData.workspaceId);
     await ctx.db.insert('boards', boardData);
   },
@@ -51,8 +51,11 @@ export const getBoardWithColumnsAndTasks = query({
   },
   handler: async (ctx, { boardId }) => {
     const board = await ctx.db.get(boardId);
+    if (!board) return null;
 
-    if (!board) {
+    try {
+      await ensureIsWorkspaceMember(ctx, board.workspaceId);
+    } catch {
       return null;
     }
 

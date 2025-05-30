@@ -1,8 +1,7 @@
 import { ConvexError, v } from 'convex/values';
 import { mutation } from './_generated/server';
-import { ensureIsWorkspaceMember } from './model/board';
+import { ensureIsWorkspaceMember } from './model/workspace';
 import { deleteTaskWithRelatedData } from './model/task';
-import { mustGetCurrentUser } from './model/user';
 
 export const createTask = mutation({
   args: {
@@ -12,7 +11,7 @@ export const createTask = mutation({
     name: v.string(),
   },
   handler: async (ctx, taskData) => {
-    const user = await mustGetCurrentUser(ctx);
+    const user = await ensureIsWorkspaceMember(ctx, taskData.workspaceId);
     await ctx.db.insert('tasks', { ...taskData, createdBy: user._id });
   },
 });
@@ -34,10 +33,13 @@ export const updateTask = mutation({
     estimate: v.optional(v.number()),
     dueDate: v.optional(v.number()),
     description: v.optional(v.string()),
-    assignedTo: v.optional(v.id('users')),
+    assignedTo: v.optional(v.union(v.id('users'), v.null())),
   },
   handler: async (ctx, { taskId, ...updatedTask }) => {
-    await ensureIsWorkspaceMember(ctx, { fromTaskId: taskId });
+    const task = await ctx.db.get(taskId);
+    if (!task) throw new ConvexError('No task found');
+
+    await ensureIsWorkspaceMember(ctx, task.workspaceId);
     await ctx.db.patch(taskId, { ...updatedTask });
   },
 });
@@ -47,7 +49,10 @@ export const deleteTask = mutation({
     taskId: v.id('tasks'),
   },
   handler: async (ctx, { taskId }) => {
-    await ensureIsWorkspaceMember(ctx, { fromTaskId: taskId });
+    const task = await ctx.db.get(taskId);
+    if (!task) throw new ConvexError('No task found');
+
+    await ensureIsWorkspaceMember(ctx, task.workspaceId);
     await deleteTaskWithRelatedData(ctx, taskId);
   },
 });
@@ -57,12 +62,10 @@ export const duplicateTask = mutation({
     taskId: v.id('tasks'),
   },
   handler: async (ctx, { taskId }) => {
-    const user = await ensureIsWorkspaceMember(ctx, { fromTaskId: taskId });
     const task = await ctx.db.get(taskId);
+    if (!task) throw new ConvexError('No task found');
 
-    if (!task) {
-      throw new ConvexError("Task doesn't exist");
-    }
+    const user = await ensureIsWorkspaceMember(ctx, task.workspaceId);
 
     const [taskLabels, checklistItems, comments] = await Promise.all([
       ctx.db
@@ -112,46 +115,6 @@ export const duplicateTask = mutation({
   },
 });
 
-export const assignUserToTask = mutation({
-  args: {
-    taskId: v.id('tasks'),
-    assignedTo: v.id('users'),
-  },
-  handler: async (ctx, { taskId, assignedTo }) => {
-    await ensureIsWorkspaceMember(ctx, { fromTaskId: taskId });
-    await ctx.db.patch(taskId, { assignedTo });
-  },
-});
-
-export const addLabelToTask = mutation({
-  args: {
-    taskId: v.id('tasks'),
-    labelId: v.id('labels'),
-  },
-  handler: async (ctx, { taskId, labelId }) => {
-    await ensureIsWorkspaceMember(ctx, { fromTaskId: taskId });
-    await ctx.db.insert('taskLabels', { taskId, labelId });
-  },
-});
-
-export const removeLabelFromTask = mutation({
-  args: {
-    taskId: v.id('tasks'),
-    labelId: v.id('labels'),
-  },
-  handler: async (ctx, { taskId, labelId }) => {
-    await ensureIsWorkspaceMember(ctx, { fromTaskId: taskId });
-
-    for await (const link of ctx.db
-      .query('taskLabels')
-      .withIndex('by_taskId_labelId', (q) =>
-        q.eq('taskId', taskId).eq('labelId', labelId),
-      )) {
-      await ctx.db.delete(link._id);
-    }
-  },
-});
-
 /* ChecklistItem APIs */
 
 export const createChecklistItem = mutation({
@@ -162,7 +125,7 @@ export const createChecklistItem = mutation({
     position: v.float64(),
   },
   handler: async (ctx, data) => {
-    await mustGetCurrentUser(ctx);
+    await ensureIsWorkspaceMember(ctx, data.workspaceId);
     await ctx.db.insert('checklistItems', { ...data, isComplete: false });
   },
 });
@@ -175,7 +138,10 @@ export const updateChecklistItem = mutation({
     isComplete: v.optional(v.boolean()),
   },
   handler: async (ctx, { checklistItemId, ...data }) => {
-    await mustGetCurrentUser(ctx);
+    const checklistItem = await ctx.db.get(checklistItemId);
+    if (!checklistItem) throw new ConvexError('No checklist item found');
+
+    await ensureIsWorkspaceMember(ctx, checklistItem.workspaceId);
     await ctx.db.patch(checklistItemId, { ...data });
   },
 });
@@ -185,7 +151,10 @@ export const deleteChecklistItem = mutation({
     checklistItemId: v.id('checklistItems'),
   },
   handler: async (ctx, { checklistItemId }) => {
-    await mustGetCurrentUser(ctx);
+    const checklistItem = await ctx.db.get(checklistItemId);
+    if (!checklistItem) throw new ConvexError('No checklist item found');
+
+    await ensureIsWorkspaceMember(ctx, checklistItem.workspaceId);
     await ctx.db.delete(checklistItemId);
   },
 });

@@ -9,16 +9,36 @@ export const ensureIsWorkspaceOwner = async (
 ) => {
   const currentUser = await mustGetCurrentUser(ctx);
 
-  const userWorkspace = await ctx.db
+  const workspaceMembership = await ctx.db
     .query('userWorkspaces')
     .withIndex('by_userId_workspaceId', (q) =>
       q.eq('userId', currentUser._id).eq('workspaceId', workspaceId),
     )
-    .unique();
+    .first();
 
-  if (!userWorkspace) {
-    throw new ConvexError('Unauthorized');
+  if (workspaceMembership?.role !== 'owner') {
+    throw new ConvexError('Unauthorized: Not workspace owner.');
   }
+};
+
+export const ensureIsWorkspaceMember = async (
+  ctx: QueryCtx | MutationCtx,
+  workspaceId: Id<'workspaces'>,
+) => {
+  const currentUser = await mustGetCurrentUser(ctx);
+
+  const workspaceMembership = await ctx.db
+    .query('userWorkspaces')
+    .withIndex('by_userId_workspaceId', (q) =>
+      q.eq('userId', currentUser._id).eq('workspaceId', workspaceId),
+    )
+    .first();
+
+  if (!workspaceMembership) {
+    throw new ConvexError('Unauthorized: Not workspace member.');
+  }
+
+  return currentUser;
 };
 
 export const ensureIsBoardWorkspaceOwner = async (

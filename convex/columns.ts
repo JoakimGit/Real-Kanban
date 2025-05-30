@@ -1,6 +1,6 @@
-import { v } from 'convex/values';
+import { ConvexError, v } from 'convex/values';
 import { mutation } from './_generated/server';
-import { ensureIsWorkspaceMember } from './model/board';
+import { ensureIsWorkspaceMember } from './model/workspace';
 import { deleteTaskWithRelatedData } from './model/task';
 
 export const createColumn = mutation({
@@ -11,7 +11,7 @@ export const createColumn = mutation({
     position: v.float64(),
   },
   handler: async (ctx, columnData) => {
-    await ensureIsWorkspaceMember(ctx, { fromBoardId: columnData.boardId });
+    await ensureIsWorkspaceMember(ctx, columnData.workspaceId);
     await ctx.db.insert('columns', columnData);
   },
 });
@@ -23,7 +23,10 @@ export const updateColumn = mutation({
     position: v.optional(v.float64()),
   },
   handler: async (ctx, { columnId, ...updatedColumn }) => {
-    await ensureIsWorkspaceMember(ctx, { fromColumnId: columnId });
+    const column = await ctx.db.get(columnId);
+    if (!column) throw new ConvexError('No column found');
+
+    await ensureIsWorkspaceMember(ctx, column?.workspaceId);
     await ctx.db.patch(columnId, { ...updatedColumn });
   },
 });
@@ -33,7 +36,10 @@ export const deleteColumn = mutation({
     columnId: v.id('columns'),
   },
   handler: async (ctx, { columnId }) => {
-    await ensureIsWorkspaceMember(ctx, { fromColumnId: columnId });
+    const column = await ctx.db.get(columnId);
+    if (!column) throw new ConvexError('No column found');
+
+    await ensureIsWorkspaceMember(ctx, column?.workspaceId);
 
     // get all tasks in this column
     const tasksInColumn = await ctx.db

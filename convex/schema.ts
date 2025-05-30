@@ -37,7 +37,7 @@ const tasksTable = defineTable({
   estimate: v.optional(v.number()),
   dueDate: v.optional(v.number()),
   description: v.optional(v.string()),
-  assignedTo: v.optional(v.id('users')),
+  assignedTo: v.optional(v.union(v.id('users'), v.null())),
   createdBy: v.string(),
 }).index('by_columnId_workspaceId', ['columnId', 'workspaceId']);
 
@@ -88,7 +88,6 @@ const notificationsTable = defineTable({
 
 const usersTable = defineTable({
   clerkUser: v.any(), // this is UserJSON from @clerk/backend
-  color: v.string(),
 }).index('by_clerk_id', ['clerkUser.id']);
 
 const userWorkspacesTable = defineTable({
