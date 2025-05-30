@@ -544,7 +544,7 @@ const LabelsList = ({
           onChange={(e) => setSearch(e.target.value.toLowerCase())}
         />
         <button onClick={() => setMode('create')}>
-          <PlusIcon className="size-4" />
+          <PlusIcon className="size-5 -mr-1" />
         </button>
       </div>
 

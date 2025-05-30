@@ -9,7 +9,6 @@ import {
   createRootRouteWithContext,
   useRouteContext,
 } from '@tanstack/react-router';
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools';
 import { createIsomorphicFn } from '@tanstack/react-start';
 import * as React from 'react';
 import { getWebRequest } from '@tanstack/react-start/server';
@@ -20,6 +19,7 @@ import appCss from '~/styles/app.css?url';
 import { ConvexReactClient } from 'convex/react';
 import { ConvexProviderWithClerk } from 'convex/react-clerk';
 import { ThemeProvider } from '~/components/theme-provider';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 export const $getSession = createIsomorphicFn().server(async () => {
   const auth = await getAuth(getWebRequest()!);
@@ -115,7 +115,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       </head>
       <body>
         {children}
-        <TanStackRouterDevtools position="bottom-right" />
+        <ReactQueryDevtools initialIsOpen={false} />
         <Scripts />
       </body>
     </html>

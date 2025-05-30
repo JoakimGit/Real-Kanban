@@ -1,8 +1,8 @@
-## Task Management App with real-time kanban
+# Task Management App with real-time kanban
 
-### Rough outline for stuff to implement
+## Rough outline for stuff to implement
 
-1. Project setup
+1. ### Project setup
 
 - [x] initialize project from Convex Tanstack Start template /w Clerk
 - [x] setup convex db schema
@@ -10,7 +10,7 @@
 - [x] setup clerk webhook for adding user to our own convex db
 - [x] figure out theming/dark mode
 
-2. Workspaces and boards
+2. ### Workspaces and boards
 
 - [x] create mutations for workspaces/boards
 - [x] update sidebar ui with buttons to call mutations
@@ -19,28 +19,29 @@
 - [x] add description and color to workspace/board create/update
 - [x] reuse create workspace/board functionality for create button in list views
 
-3. Board columns and tasks
+3. ### Board columns and tasks
 
 - [x] create board view with columns/tasks
 - [x] modal for updating task with all its properties, including checklist items
 - [x] implement drag & drop
-- [ ] various actions (minimize task properties, copy task, move task, create col/task/checklistitem, deletes, etc.)
+- [x] various actions (copy task, move task, create col/task/checklistitem, deletes, etc.)
 
-4. Secondary features
+4. ### Secondary features
 
 - [ ] filter bar in board view
-- [ ] settings pages for user/workspace/others
-- [ ] add user management (inviting users to workspace/board, role/authorization stuff)
+- [x] settings pages for workspace
+- [x] add user management (inviting users to workspace, authorization check in convex endpoints. Auth checks in client)
 - [ ] add task comments
 
-5. Bonus features
+5. ### Bonus features
 
 - [ ] add notifications
 - [ ] add activity log to tasks
 - [ ] add file upload for task attachments
 - [ ] conflict resolution for 2 users updating same entity at same time (automatic + manual)
+- [ ] user settings
 
-6. Polish
+6. ### Polish
 
 - [ ] make responsive for mobile
 - [ ] better error handling?
@@ -48,11 +49,18 @@
 - [ ] overall ui polishing
 - [ ] custom fields on task?
 
-7. Deployment
+7. ### Deployment
 
 - [ ] deploy Tanstack app to netlify
 - [ ] deploy convex to production
 
-### Todo
+### Other thoughts
 
-- Optimistic mutations (checklistItem toggle)
+- Optimistic mutations (checklistItem toggle, ..)
+- Checklistitems dnd
+- global search in header
+- Archive tasks + bring back archived tasks
+- Initial onboarding flow
+- transfer workspace ownership?
+- initiate fetches earlier in loader
+- useSuspenseQuery
