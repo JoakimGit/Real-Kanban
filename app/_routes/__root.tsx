@@ -21,7 +21,7 @@ import { ConvexProviderWithClerk } from 'convex/react-clerk';
 import { ThemeProvider } from '~/components/theme-provider';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
-export const $getSession = createIsomorphicFn().server(async () => {
+const $getSession = createIsomorphicFn().server(async () => {
   const auth = await getAuth(getWebRequest()!);
   const token = await auth.getToken({ template: 'convex' });
 
