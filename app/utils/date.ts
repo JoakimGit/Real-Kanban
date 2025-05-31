@@ -2,7 +2,7 @@ import { format } from 'date-fns';
 
 export function formatDate(
   dateTime: number | undefined,
-  dateFormat: string = 'MMM D',
+  dateFormat: string = 'MMM d',
 ) {
   if (!dateTime) return null;
   try {

@@ -114,3 +114,9 @@
     font-family: var(--font-sans);
   }
 }
+
+@layer utilities {
+  .flex-center {
+    @apply flex justify-center items-center;
+  } 
+}

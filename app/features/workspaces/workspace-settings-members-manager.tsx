@@ -131,7 +131,7 @@ export function WorkspaceMembersManager({
                           {(getUserDisplayName(user.clerkUser) ?? '')[0]}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="truncate">
+                      <span className="capitalize truncate">
                         {getUserDisplayName(user.clerkUser)}
                       </span>
                     </div>
