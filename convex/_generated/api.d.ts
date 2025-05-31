@@ -15,6 +15,7 @@ import type {
 } from "convex/server";
 import type * as boards from "../boards.js";
 import type * as columns from "../columns.js";
+import type * as comments from "../comments.js";
 import type * as http from "../http.js";
 import type * as labels from "../labels.js";
 import type * as model_task from "../model/task.js";
@@ -35,6 +36,7 @@ import type * as workspaces from "../workspaces.js";
 declare const fullApi: ApiFromModules<{
   boards: typeof boards;
   columns: typeof columns;
+  comments: typeof comments;
   http: typeof http;
   labels: typeof labels;
   "model/task": typeof model_task;

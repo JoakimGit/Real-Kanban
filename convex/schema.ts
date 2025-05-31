@@ -65,6 +65,7 @@ const commentsTable = defineTable({
   taskId: v.id('tasks'),
   text: v.string(),
   author: v.id('users'),
+  lastModified: v.optional(v.number()),
 }).index('by_taskId', ['taskId']);
 
 const activityLogTable = defineTable({
