@@ -10,6 +10,7 @@ import {
   CheckSquareIcon,
   CopyIcon,
   LinkIcon,
+  MessageSquareIcon,
   MoreHorizontalIcon,
   Trash2Icon,
   UserIcon,
@@ -176,24 +177,17 @@ export const Task = ({ columnId, task, index }: TaskProps) => {
 
       {shouldShowFooter && (
         <CardFooter className="relative gap-3 px-3 py-2 border-t text-xs text-muted-foreground">
-          <div className="flex items-center mb-0.5" title="Has description">
+          <div className="flex items-center" title="Has description">
             <AlignLeftIcon className="size-4" />
           </div>
+          {task.hasComments && (
+            <div className="flex items-center" title="Has coments">
+              <MessageSquareIcon className="size-4 mr-1" />
+            </div>
+          )}
 
-          {/* <div
-            className="flex items-center mb-0.5"
-            // title={`${task.comments} comment${task.comments !== 1 ? 's' : ''}`}
-          >
-            <MessageSquareIcon className="size-4 mr-1" />
-            {2}
-          </div> */}
-
-          {/* <div
-            className="flex items-center mb-0.5"
-            // title={`${task.attachments} attachment${task.attachments !== 1 ? 's' : ''}`}
-          >
+          {/* <div className="flex items-center mb-0.5" title="Has attachments">
             <PaperclipIcon className="size-4 mr-1" />
-            {2}
           </div> */}
 
           <TaskFooterChecklist checklistItems={task.checklistItems} />
@@ -212,10 +206,7 @@ const TaskFooterChecklist = ({
 
   return (
     <>
-      <div
-        className="flex items-center mb-0.5"
-        // title={`${task.subtasks} subtask${task.subtasks !== 1 ? 's' : ''}`}
-      >
+      <div className="flex items-center" title="Has checklist items">
         <CheckSquareIcon className="size-4 mr-1" />
         {completedItems.length}/{checklistItems.length}
       </div>

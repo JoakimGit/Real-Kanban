@@ -33,17 +33,15 @@ export type TaskWithRelatedData = Omit<Doc<'tasks'>, 'assignedTo'> & {
   assignedTo: User | null;
   labels: Array<Doc<'labels'>>;
   checklistItems: Array<Doc<'checklistItems'>>;
+  hasComments: boolean;
 };
 
 export type SortableColumn = Doc<'columns'> & {
   id: Id<'columns'>;
 };
 
-export type TaskWithRelatedDataAndId = Omit<Doc<'tasks'>, 'assignedTo'> & {
+export type TaskWithRelatedDataAndId = TaskWithRelatedData & {
   id: Id<'tasks'>;
-  assignedTo: User | null;
-  labels: Array<Doc<'labels'>>;
-  checklistItems: Array<Doc<'checklistItems'>>;
 };
 
 type DroppableProps = {

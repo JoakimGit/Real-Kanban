@@ -80,31 +80,37 @@ export const getBoardWithColumnsAndTasks = query({
         // Fetch related data for tasks in parallel
         const tasksWithDetails = await Promise.all(
           sortedTasks.map(async (task) => {
-            const [assignedTo, labels, checklistItems] = await Promise.all([
-              (task.assignedTo
-                ? ctx.db.get(task.assignedTo)
-                : null) as User | null,
-              getManyVia(
-                ctx.db,
-                'taskLabels',
-                'labelId',
-                'by_taskId_labelId',
-                task._id,
-                'taskId',
-              ),
-              ctx.db
-                .query('checklistItems')
-                .withIndex('by_taskId_workspaceId', (q) =>
-                  q.eq('taskId', task._id),
-                )
-                .collect(),
-            ]);
+            const [assignedTo, labels, checklistItems, anyComment] =
+              await Promise.all([
+                (task.assignedTo
+                  ? ctx.db.get(task.assignedTo)
+                  : null) as User | null,
+                getManyVia(
+                  ctx.db,
+                  'taskLabels',
+                  'labelId',
+                  'by_taskId_labelId',
+                  task._id,
+                  'taskId',
+                ),
+                ctx.db
+                  .query('checklistItems')
+                  .withIndex('by_taskId_workspaceId', (q) =>
+                    q.eq('taskId', task._id),
+                  )
+                  .collect(),
+                ctx.db
+                  .query('comments')
+                  .withIndex('by_taskId', (q) => q.eq('taskId', task._id))
+                  .first(),
+              ]);
 
             return {
               ...task,
               assignedTo,
               labels: labels.filter(Boolean),
               checklistItems: checklistItems.sort(orderByPosition),
+              hasComments: anyComment !== null,
             };
           }),
         );
