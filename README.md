@@ -28,7 +28,7 @@
 
 4. ### Secondary features
 
-- [ ] filter bar in board view
+- [x] filter bar in board view
 - [x] settings pages for workspace
 - [x] add user management (inviting users to workspace, authorization check in convex endpoints. Auth checks in client)
 - [x] add task comments

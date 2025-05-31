@@ -7,11 +7,24 @@ import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router';
 import { api } from 'convex/_generated/api';
 import { Id } from 'convex/_generated/dataModel';
 import { FunctionReturnType } from 'convex/server';
-import { ArrowLeft, PlusIcon } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import {
+  ArrowLeft,
+  CheckIcon,
+  PlusIcon,
+  TagIcon,
+  UsersRoundIcon,
+} from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import * as v from 'valibot';
+import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
 import { Button } from '~/components/ui/button';
 import { Dialog, DialogPortal } from '~/components/ui/dialog';
 import { Input } from '~/components/ui/input';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '~/components/ui/popover';
 import { SheetCloseBtn, taskSidebarModalClasses } from '~/components/ui/sheet';
 import {
   Column,
@@ -20,7 +33,8 @@ import {
 } from '~/features/boards/column';
 import { Task } from '~/features/boards/task';
 import TaskDetailSidebar from '~/features/boards/task-detail-modal';
-import * as v from 'valibot';
+import { cn } from '~/utils/cn';
+import { getUserDisplayName } from '~/utils/user';
 
 const taskSearchSchema = v.object({
   taskId: v.optional(v.pipe(v.string(), v.length(32))),
@@ -51,6 +65,14 @@ function RouteComponent() {
   const { taskId } = Route.useSearch();
   const boardId = Route.useParams().boardId as Id<'boards'>;
   const navigate = useNavigate({ from: Route.fullPath });
+
+  const [searchFilter, setSearchFilter] = useState('');
+  const [selectedMembers, setSelectedMembers] = useState<Set<Id<'users'>>>(
+    new Set(),
+  );
+  const [selectedLabels, setSelectedLabels] = useState<Set<Id<'labels'>>>(
+    new Set(),
+  );
 
   const [isAddingColumn, setIsAddingColumn] = useState(false);
   const [newColumnTitle, setNewColumnTitle] = useState('');
@@ -84,6 +106,20 @@ function RouteComponent() {
       setColumnOrder(newColumnOrder);
     }
   }, [data]);
+
+  const filteredTasksMap = useMemo(() => {
+    const filtered: Record<Id<'columns'>, Array<TaskWithRelatedDataAndId>> = {};
+
+    for (const column of dndColumns) {
+      let tasks = dndTasksMap[column._id] || [];
+      tasks = filterBySearch(tasks, searchFilter);
+      tasks = filterByMembers(tasks, selectedMembers);
+      tasks = filterByLabels(tasks, selectedLabels);
+      filtered[column._id] = tasks;
+    }
+
+    return filtered;
+  }, [dndTasksMap, dndColumns, searchFilter, selectedMembers, selectedLabels]);
 
   const { mutate: updateColumn } = useMutation({
     mutationFn: useConvexMutation(api.columns.updateColumn),
@@ -186,9 +222,9 @@ function RouteComponent() {
   const selectedTask = findTaskById(data.columns, taskId);
   return (
     <div className="">
-      <header className="flex items-center gap-x-3 px-1 mb-2">
+      <header className="flex items-center gap-x-3 px-1 mb-4">
         <Button variant="outline" size="icon" onClick={goBack}>
-          <ArrowLeft className="h-4 w-4" />
+          <ArrowLeft className="size-4" />
           <span className="sr-only">Back</span>
         </Button>
         <div className="flex items-center gap-x-2">
@@ -198,8 +234,24 @@ function RouteComponent() {
           </p>
         </div>
       </header>
-      <div className="px-1 mb-4">Here will be filter stuff</div>{' '}
-      {/* TODO - implement filter bar */}
+      <div className="flex items-center mb-4 px-1">
+        {/* Filter bar */}
+        <SearchFilterInput
+          searchFilter={searchFilter}
+          setSearchFilter={setSearchFilter}
+        />
+        <MemberFilterButton
+          workspaceId={data.workspaceId}
+          selectedMembers={selectedMembers}
+          setSelectedMembers={setSelectedMembers}
+        />
+        <LabelFilterButton
+          workspaceId={data.workspaceId}
+          selectedLabels={selectedLabels}
+          setSelectedLabels={setSelectedLabels}
+        />
+      </div>
+
       <div className="flex gap-4 items-start">
         <DragDropProvider
           onDragStart={() => {
@@ -215,23 +267,27 @@ function RouteComponent() {
           onDragEnd={handleDragEnd}
         >
           <div className="flex gap-5 flex-wrap items-start">
-            {dndColumns.map((column, colIndex) => (
-              <Column
-                key={column._id}
-                index={colIndex}
-                column={{ ...column }}
-                tasks={dndTasksMap[column._id] || []}
-              >
-                {dndTasksMap[column._id]?.map((task, index) => (
-                  <Task
-                    key={task._id}
-                    task={task}
-                    index={index}
-                    columnId={column._id}
-                  />
-                ))}
-              </Column>
-            ))}
+            {dndColumns.map((column, colIndex) => {
+              const filteredTasks = filteredTasksMap[column._id];
+
+              return (
+                <Column
+                  key={column._id}
+                  index={colIndex}
+                  column={{ ...column }}
+                  tasks={dndTasksMap[column._id] || []}
+                >
+                  {filteredTasks.map((task, index) => (
+                    <Task
+                      key={task._id}
+                      task={task}
+                      index={index}
+                      columnId={column._id}
+                    />
+                  ))}
+                </Column>
+              );
+            })}
           </div>
         </DragDropProvider>
 
@@ -320,4 +376,228 @@ function findTaskById(
   }
 
   return null;
+}
+
+const SearchFilterInput = ({
+  searchFilter,
+  setSearchFilter,
+}: {
+  searchFilter: string;
+  setSearchFilter: React.Dispatch<React.SetStateAction<string>>;
+}) => {
+  return (
+    <Input
+      className="w-48 rounded-none border-inherit"
+      value={searchFilter}
+      onChange={(e) => setSearchFilter(e.target.value)}
+      placeholder="Filter tasks.."
+    />
+  );
+};
+
+const MemberFilterButton = ({
+  workspaceId,
+  selectedMembers,
+  setSelectedMembers,
+}: {
+  workspaceId: Id<'workspaces'>;
+  selectedMembers: Set<Id<'users'>>;
+  setSelectedMembers: React.Dispatch<React.SetStateAction<Set<Id<'users'>>>>;
+}) => {
+  const [search, setSearch] = useState('');
+
+  const { data: members } = useQuery(
+    convexQuery(api.workspaces.getWorkspaceMembers, {
+      workspaceId,
+    }),
+  );
+
+  const toggleMember = (userId: Id<'users'>) => {
+    setSelectedMembers((prev) => {
+      const next = new Set(prev);
+      if (next.has(userId)) {
+        next.delete(userId);
+      } else {
+        next.add(userId);
+      }
+      return next;
+    });
+  };
+
+  const filteredMembers = search
+    ? members?.filter((user) => {
+        const name = getUserDisplayName(user.clerkUser)?.toLowerCase() ?? '';
+        return name.includes(search.toLowerCase());
+      })
+    : members;
+  return (
+    <Popover>
+      <PopoverTrigger
+        title="Filter by member"
+        className="relative flex-center p-1 border border-x-0 w-8 h-9"
+      >
+        <UsersRoundIcon className="size-4" />
+        {selectedMembers.size > 0 && (
+          <span className="absolute top-1 right-0.5 size-2 bg-primary rounded-full" />
+        )}
+      </PopoverTrigger>
+      <PopoverContent className="w-80" align="end">
+        <div className="space-y-4">
+          <Input
+            placeholder="Search users..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="mb-2"
+          />
+          <div className="space-y-2 max-h-[300px] overflow-y-auto">
+            {filteredMembers?.map((user) => (
+              <button
+                key={user._id}
+                className="w-full mb-1 text-sm"
+                onClick={() => toggleMember(user._id)}
+              >
+                <div className="flex items-center gap-2">
+                  <Avatar className="size-6">
+                    <AvatarImage
+                      src={user.clerkUser.image_url}
+                      alt={getUserDisplayName(user.clerkUser) ?? ''}
+                    />
+                    <AvatarFallback>
+                      {(getUserDisplayName(user.clerkUser) ?? '')[0]}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="capitalize truncate">
+                    {getUserDisplayName(user.clerkUser)}
+                  </span>
+                  {selectedMembers.has(user._id) && (
+                    <CheckIcon className="size-4 ml-auto" />
+                  )}
+                </div>
+              </button>
+            ))}
+            {filteredMembers?.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No users found
+              </p>
+            )}
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+const LabelFilterButton = ({
+  workspaceId,
+  selectedLabels,
+  setSelectedLabels,
+}: {
+  workspaceId: Id<'workspaces'>;
+  selectedLabels: Set<Id<'labels'>>;
+  setSelectedLabels: React.Dispatch<React.SetStateAction<Set<Id<'labels'>>>>;
+}) => {
+  const [search, setSearch] = useState('');
+
+  const { data: labels } = useQuery(
+    convexQuery(api.labels.getLabelsByWorkspace, {
+      workspaceId,
+    }),
+  );
+
+  const toggleLabel = (labelId: Id<'labels'>) => {
+    setSelectedLabels((prev) => {
+      const next = new Set(prev);
+      if (next.has(labelId)) {
+        next.delete(labelId);
+      } else {
+        next.add(labelId);
+      }
+      return next;
+    });
+  };
+
+  const filteredLabels = useMemo(() => {
+    return search === ''
+      ? labels
+      : labels?.filter((label) => label.name.toLowerCase().includes(search));
+  }, [search, labels]);
+
+  return (
+    <Popover>
+      <PopoverTrigger
+        className="relative flex-center p-1 border w-8 h-9"
+        title="Filter by label"
+      >
+        <TagIcon className="size-4" />
+        {selectedLabels.size > 0 && (
+          <span className="absolute top-1 right-0.5 size-2 bg-primary rounded-full" />
+        )}
+      </PopoverTrigger>
+      <PopoverContent className="max-h-80 overflow-y-auto" align="start">
+        <div className="flex items-center gap-x-2">
+          <Input
+            className="mb-2 w-auto grow rounded-none shrink-0"
+            placeholder="Search labels.."
+            value={search}
+            onChange={(e) => setSearch(e.target.value.toLowerCase())}
+          />
+        </div>
+
+        <div className="flex flex-col gap-y-2">
+          {filteredLabels?.map((label) => (
+            <div key={label._id} className="flex items-center gap-x-2">
+              <button
+                className={cn(
+                  'flex items-center justify-between text-left grow py-2 px-3',
+                  label.color,
+                )}
+                onClick={() => toggleLabel(label._id)}
+              >
+                {label.name}
+                {selectedLabels.has(label._id) && (
+                  <CheckIcon className="size-5" />
+                )}
+              </button>
+            </div>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+function filterBySearch(
+  tasks: Array<TaskWithRelatedDataAndId>,
+  searchTerm: string,
+) {
+  if (!searchTerm) return tasks;
+  const loweredSearch = searchTerm.toLowerCase();
+  return tasks.filter(
+    (task) =>
+      task.name.toLowerCase().includes(loweredSearch) ||
+      task.description?.toLowerCase().includes(loweredSearch),
+  );
+}
+
+function filterByMembers(
+  tasks: Array<TaskWithRelatedDataAndId>,
+  selectedMembers: Set<Id<'users'>>,
+) {
+  if (selectedMembers.size === 0) return tasks;
+  return tasks.filter(
+    (task) => task.assignedTo && selectedMembers.has(task.assignedTo._id),
+  );
+}
+
+function filterByLabels(
+  tasks: Array<TaskWithRelatedDataAndId>,
+  selectedLabels: Set<Id<'labels'>>,
+) {
+  if (selectedLabels.size === 0) return tasks;
+  return tasks.filter((task) => {
+    const taskLabelIds = new Set(task.labels.map((label) => label._id));
+    return Array.from(selectedLabels).some((labelId) =>
+      taskLabelIds.has(labelId),
+    );
+  });
 }
