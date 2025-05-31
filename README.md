@@ -40,6 +40,7 @@
 - [ ] add file upload for task attachments
 - [ ] conflict resolution for 2 users updating same entity at same time (automatic + manual)
 - [ ] user settings
+- [ ] global search in header
 
 6. ### Polish
 
@@ -47,7 +48,6 @@
 - [ ] better error handling?
 - [ ] logging/metrics?
 - [ ] overall ui polishing
-- [ ] custom fields on task?
 
 7. ### Deployment
 
@@ -58,9 +58,8 @@
 
 - Optimistic mutations (checklistItem toggle, ..)
 - Checklistitems dnd
-- global search in header
 - Archive tasks + bring back archived tasks
 - Initial onboarding flow
-- transfer workspace ownership?
 - initiate fetches earlier in loader
 - useSuspenseQuery
+- custom fields on task?

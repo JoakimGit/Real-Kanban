@@ -1,22 +1,15 @@
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { api } from 'convex/_generated/api';
-import { Doc, Id } from 'convex/_generated/dataModel';
-import { MoreHorizontalIcon, Trash2Icon, PencilIcon } from 'lucide-react';
+import { Id } from 'convex/_generated/dataModel';
+import { TaskComment } from 'convex/comments';
+import { PencilIcon, Trash2Icon } from 'lucide-react';
 import { useState } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
 import { Button } from '~/components/ui/button';
 import { Textarea } from '~/components/ui/textarea';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '~/components/ui/dropdown-menu';
-import { getUserDisplayName } from '~/utils/user';
 import { formatDate } from '~/utils/date';
-import { useAuth, useUser } from '@clerk/tanstack-react-start';
-import { TaskComment } from 'convex/comments';
-import { Avatar, AvatarFallback, AvatarImage } from '~/components/ui/avatar';
+import { getUserDisplayName } from '~/utils/user';
 
 interface CommentsProps {
   taskId: Id<'tasks'>;
