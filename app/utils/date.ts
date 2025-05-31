@@ -1,9 +1,12 @@
 import { format } from 'date-fns';
 
-export function formatDate(dateTime: number | undefined) {
+export function formatDate(
+  dateTime: number | undefined,
+  dateFormat: string = 'MMM D',
+) {
   if (!dateTime) return null;
   try {
-    return format(new Date(dateTime), 'MMM d');
+    return format(new Date(dateTime), dateFormat);
   } catch {
     return 'Invalid date';
   }

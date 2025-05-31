@@ -38,6 +38,7 @@ import { CreateLabelForm } from '~/_routes/_authed/workspaces_.$workspaceId.sett
 import { colorSelections } from '~/utils/constants';
 import { LabelInput } from '~/utils/validation';
 import { getUserDisplayName } from '~/utils/user';
+import { CommentsList } from './comments-list';
 
 interface TaskDetailSidebarProps {
   task: TaskWithRelatedData;
@@ -422,6 +423,16 @@ export default function TaskDetailSidebar({
           />
         </div>
 
+        {/* Comments */}
+        <Separator className="dark:bg-gray-700" />
+
+        <div>
+          <div className="flex items-center gap-x-2 mb-2">
+            <h4 className="text-foreground font-semibold">Comments</h4>
+          </div>
+          <CommentsList taskId={task._id} workspaceId={task.workspaceId} />
+        </div>
+
         {/* Attachments */}
         <Separator className="dark:bg-gray-700" />
 
@@ -429,17 +440,6 @@ export default function TaskDetailSidebar({
           <div className="flex items-center gap-x-2 mb-2">
             <h4 className="text-foreground font-semibold">
               Attachments (under construction)
-            </h4>
-          </div>
-        </div>
-
-        {/* Comments */}
-        <Separator className="dark:bg-gray-700" />
-
-        <div>
-          <div className="flex items-center gap-x-2 mb-2">
-            <h4 className="text-foreground font-semibold">
-              Comments (under construction)
             </h4>
           </div>
         </div>
