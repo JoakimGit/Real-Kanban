@@ -1,6 +1,5 @@
 import { SignIn, useAuth } from '@clerk/tanstack-react-start';
 import { convexQuery } from '@convex-dev/react-query';
-import { useSuspenseQuery } from '@tanstack/react-query';
 import { createFileRoute, Outlet } from '@tanstack/react-router';
 import { api } from 'convex/_generated/api';
 import { HeaderBar } from '~/components/layout/header-bar';
@@ -29,7 +28,6 @@ export const Route = createFileRoute('/_authed')({
 
 function ProtectedLayout() {
   const { isSignedIn } = useAuth();
-  useSuspenseQuery(convexQuery(api.workspaces.getWorkspacesWithRole, {}));
 
   if (!isSignedIn) {
     return (
@@ -51,3 +49,5 @@ function ProtectedLayout() {
     </SidebarProvider>
   );
 }
+
+const 
