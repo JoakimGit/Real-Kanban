@@ -49,5 +49,3 @@ function ProtectedLayout() {
     </SidebarProvider>
   );
 }
-
-const 
