@@ -51,8 +51,10 @@
 
 7. ### Deployment
 
-- [ ] deploy Tanstack app to netlify
-- [ ] deploy convex to production
+- [x] deploy Tanstack app to netlify
+- [x] deploy convex to production
+- [ ] create cron job that resets db on a schedule, and seeds db with fresh data
+- [ ] do something about not-yet-implemented features that are currently shown
 
 ### Other thoughts
 
