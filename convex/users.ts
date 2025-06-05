@@ -20,6 +20,24 @@ export const getAllUsers = query({
 
 // INTERNAL APIS BELOW
 
+export const addUserToDemoBoards = internalMutation({
+  args: {
+    userId: v.id('users'),
+  },
+  handler: async (ctx, { userId }) => {
+    const workspaces = await ctx.db.query('workspaces').take(1);
+
+    for (let i = 0; i < workspaces.length; i++) {
+      await ctx.db.insert('userWorkspaces', {
+        workspaceId: workspaces[i]._id,
+        userId,
+        role: i === 0 ? 'owner' : 'member',
+      });
+    }
+    console.log('Added new user to demo workspaces');
+  },
+});
+
 /** Get user by Clerk user id (AKA "subject" on auth)  */
 export const getUser = internalQuery({
   args: { subject: v.string() },
@@ -35,9 +53,10 @@ export const updateOrCreateUser = internalMutation({
     const userRecord = await userQuery(ctx, clerkUser.id);
 
     if (userRecord === null) {
-      await ctx.db.insert('users', { clerkUser });
+      return await ctx.db.insert('users', { clerkUser });
     } else {
       await ctx.db.patch(userRecord._id, { clerkUser });
+      return userRecord._id;
     }
   },
 });
