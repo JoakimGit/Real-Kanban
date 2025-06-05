@@ -214,7 +214,7 @@ export default function TaskDetailSidebar({
             className="text-sm"
             type="block"
             value={task.description}
-            placeholder="Add description"
+            placeholder="Add description.."
             onBlur={(description) =>
               updateTask({ taskId: task._id, description })
             }
@@ -227,7 +227,7 @@ export default function TaskDetailSidebar({
             type="number"
             className="text-sm shadow-none"
             value={task.estimate}
-            placeholder="Estimate in hours"
+            placeholder="Add an estimate.."
             onBlur={(estimate) => updateTask({ taskId: task._id, estimate })}
             getDisplayText={(val) => (val ? `${val}h` : null)}
           />
@@ -289,7 +289,7 @@ export default function TaskDetailSidebar({
               }
             >
               <SelectTrigger className="capitalize [&>span]:pr-1">
-                <SelectValue placeholder="Select priority" />
+                <SelectValue placeholder="Select column.." />
               </SelectTrigger>
               <SelectContent>
                 {columns.map((col) => (
@@ -310,7 +310,7 @@ export default function TaskDetailSidebar({
               onValueChange={(val) => handlePriorityChange(val)}
             >
               <SelectTrigger className="capitalize [&>span]:pr-1">
-                <SelectValue placeholder="Select priority" />
+                <SelectValue placeholder="Select priority.." />
               </SelectTrigger>
               <SelectContent>
                 {['low', 'medium', 'high', 'critical'].map((prio) => (
@@ -334,7 +334,7 @@ export default function TaskDetailSidebar({
                   {task.dueDate ? (
                     formatDate(task.dueDate)
                   ) : (
-                    <span>Pick a date</span>
+                    <span>Pick a date..</span>
                   )}
                 </Button>
               </PopoverTrigger>
@@ -346,6 +346,7 @@ export default function TaskDetailSidebar({
                     updateTask({ taskId: task._id, dueDate: day?.getTime() });
                     setIsCalendarOpen(false);
                   }}
+                  fromDate={new Date()}
                   initialFocus
                 />
               </PopoverContent>

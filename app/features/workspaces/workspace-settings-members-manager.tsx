@@ -160,7 +160,7 @@ export function WorkspaceMembersManager({
                   src={user.clerkUser.image_url}
                   alt={getUserDisplayName(user.clerkUser) ?? ''}
                 />
-                <AvatarFallback>
+                <AvatarFallback className="border">
                   {(getUserDisplayName(user.clerkUser) ?? '')[0]}
                 </AvatarFallback>
               </Avatar>

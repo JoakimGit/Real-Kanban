@@ -96,7 +96,8 @@ export const Task = ({ columnId, task, index }: TaskProps) => {
 
   const shouldShowFooter =
     task.checklistItems.length !== 0 ||
-    (task.description && task.description.length > 0);
+    (task.description && task.description.length > 0) ||
+    task.hasComments;
 
   return (
     <Card
@@ -177,9 +178,11 @@ export const Task = ({ columnId, task, index }: TaskProps) => {
 
       {shouldShowFooter && (
         <CardFooter className="relative gap-3 px-3 py-2 border-t text-xs text-muted-foreground">
-          <div className="flex items-center" title="Has description">
-            <AlignLeftIcon className="size-4" />
-          </div>
+          {task.description && (
+            <div className="flex items-center" title="Has description">
+              <AlignLeftIcon className="size-4" />
+            </div>
+          )}
           {task.hasComments && (
             <div className="flex items-center" title="Has coments">
               <MessageSquareIcon className="size-4 mr-1" />
@@ -202,8 +205,9 @@ const TaskFooterChecklist = ({
 }: {
   checklistItems: Array<Doc<'checklistItems'>>;
 }) => {
-  const completedItems = checklistItems.filter((item) => item.isComplete);
+  if (!checklistItems || checklistItems.length === 0) return null;
 
+  const completedItems = checklistItems.filter((item) => item.isComplete);
   return (
     <>
       <div className="flex items-center" title="Has checklist items">
