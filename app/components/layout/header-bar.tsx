@@ -7,6 +7,8 @@ import {
 import { SearchIcon, Settings, BellIcon } from 'lucide-react';
 import { SidebarTrigger } from '../ui/sidebar';
 import { ThemeToggle } from '../ui/theme-toggle';
+import { Input } from '../ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 
 export const HeaderBar = () => {
   return (
@@ -15,10 +17,10 @@ export const HeaderBar = () => {
       <label className="relative flex items-center gap-x-2">
         <SearchIcon className="absolute left-2 size-5 " />
         {/* TODO - implement search functionality */}
-        <input
-          className="pl-9 pr-3 py-1.5 bg-inherit border rounded-xl"
+        <Input
+          className="pl-9 border rounded-xl"
           type="text"
-          placeholder="Search..."
+          placeholder="I do nothing right now.."
         />
       </label>
 
@@ -26,8 +28,12 @@ export const HeaderBar = () => {
         <ThemeToggle />
 
         <SignedIn>
-          <Settings className="size-6 cursor-pointer" />
-          <BellIcon className="size-6 cursor-pointer" />
+          <NotImplementedPopover>
+            <Settings className="size-6" />
+          </NotImplementedPopover>
+          <NotImplementedPopover>
+            <BellIcon className="size-6" />
+          </NotImplementedPopover>
           <UserButton />
         </SignedIn>
 
@@ -36,5 +42,14 @@ export const HeaderBar = () => {
         </SignedOut>
       </div>
     </header>
+  );
+};
+
+const NotImplementedPopover = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <Popover>
+      <PopoverTrigger>{children}</PopoverTrigger>
+      <PopoverContent>{"I'm not yet implemented"}</PopoverContent>
+    </Popover>
   );
 };
