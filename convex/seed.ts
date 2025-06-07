@@ -61,7 +61,7 @@ export const seedDemoData = internalMutation({
     // --- Demo Workspace 1: Marketing Department ---
     const marketingWorkspaceId = await db.insert('workspaces', {
       name: 'Marketing Demo',
-      description: 'Central hub for all marketing initiatives and campaigns.',
+      description: 'Demo workspace with sample data',
       color: 'bg-lime-600',
     });
     console.log(`Created Marketing Workspace: ${marketingWorkspaceId}`);

@@ -19,6 +19,8 @@ import type * as comments from "../comments.js";
 import type * as crons from "../crons.js";
 import type * as http from "../http.js";
 import type * as labels from "../labels.js";
+import type * as model_board from "../model/board.js";
+import type * as model_column from "../model/column.js";
 import type * as model_task from "../model/task.js";
 import type * as model_user from "../model/user.js";
 import type * as model_workspace from "../model/workspace.js";
@@ -43,6 +45,8 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   http: typeof http;
   labels: typeof labels;
+  "model/board": typeof model_board;
+  "model/column": typeof model_column;
   "model/task": typeof model_task;
   "model/user": typeof model_user;
   "model/workspace": typeof model_workspace;
