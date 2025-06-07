@@ -7,6 +7,7 @@ import {
   ensureIsWorkspaceMember,
   ensureIsWorkspaceOwner,
 } from './model/workspace';
+import * as Workspaces from './model/workspace';
 
 type WorkspaceModel = {
   workspace: Doc<'workspaces'>;
@@ -55,8 +56,7 @@ export const deleteWorkspace = mutation({
     workspaceId: v.id('workspaces'),
   },
   handler: async (ctx, { workspaceId }) => {
-    await ensureIsWorkspaceOwner(ctx, workspaceId);
-    await ctx.db.delete(workspaceId);
+    await Workspaces.deleteWorkspace(ctx, workspaceId);
   },
 });
 
@@ -95,7 +95,9 @@ export const getUserWorkspaces = query({
       }),
     );
 
-    const filteredResult = result.filter((wsModel) => !!wsModel.workspace);
+    const filteredResult = result
+      .filter((wsModel) => !!wsModel.workspace)
+      .sort((a, b) => a.workspace!.name.localeCompare(b.workspace!.name));
     return filteredResult as Array<WorkspaceModel>;
   },
 });
