@@ -64,8 +64,8 @@ export const AppSidebarBoardDropdown = ({ board }: BoardDropdownProps) => {
             <DropdownMenuItem className="flex-col items-start p-0 text-base">
               <button
                 onClick={(e) => {
-                  setIsEditMode(true);
                   e.stopPropagation();
+                  setIsEditMode(true);
                 }}
                 className="flex w-full items-center gap-x-2 hover:bg-accent py-2 px-3"
               >
@@ -79,7 +79,7 @@ export const AppSidebarBoardDropdown = ({ board }: BoardDropdownProps) => {
                 onClick={(e) => {
                   e.stopPropagation();
                   const confirmed = confirm(
-                    'Are you sure you want to delete this board?',
+                    'Are you sure you want to delete this board? This action will delete all items inside the board.',
                   );
                   if (confirmed) deleteBoard({ boardId: board._id });
                 }}

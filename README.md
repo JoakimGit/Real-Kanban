@@ -47,14 +47,15 @@
 - [ ] make responsive for mobile
 - [ ] better error handling?
 - [ ] logging/metrics?
-- [ ] overall ui polishing
+- [x] overall ui polishing
+- [x] login/signup page
 
 7. ### Deployment
 
 - [x] deploy Tanstack app to netlify
 - [x] deploy convex to production
-- [ ] create cron job that resets db on a schedule, and seeds db with fresh data
-- [ ] do something about not-yet-implemented features that are currently shown
+- [x] create cron job that resets db on a schedule, and seeds db with fresh data
+- [x] do something about not-yet-implemented features that are currently shown
 
 ### Other thoughts
 
@@ -62,6 +63,5 @@
 - Checklistitems dnd
 - Archive tasks + bring back archived tasks
 - Initial onboarding flow
-- initiate fetches earlier in loader
-- useSuspenseQuery
+- initiate fetches loader and suspense (ensureQueryData + useSuspenseQuery)
 - custom fields on task?
