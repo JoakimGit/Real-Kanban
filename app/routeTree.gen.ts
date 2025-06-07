@@ -11,6 +11,7 @@
 // Import Routes
 
 import { Route as rootRoute } from './_routes/__root'
+import { Route as LoginImport } from './_routes/login'
 import { Route as AuthedImport } from './_routes/_authed'
 import { Route as AuthedIndexImport } from './_routes/_authed/index'
 import { Route as AuthedWorkspacesWorkspaceIdImport } from './_routes/_authed/workspaces.$workspaceId'
@@ -18,6 +19,12 @@ import { Route as AuthedBoardsBoardIdImport } from './_routes/_authed/boards.$bo
 import { Route as AuthedWorkspacesWorkspaceIdSettingsImport } from './_routes/_authed/workspaces_.$workspaceId.settings'
 
 // Create/Update Routes
+
+const LoginRoute = LoginImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRoute,
+} as any)
 
 const AuthedRoute = AuthedImport.update({
   id: '/_authed',
@@ -59,6 +66,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: ''
       preLoaderRoute: typeof AuthedImport
+      parentRoute: typeof rootRoute
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginImport
       parentRoute: typeof rootRoute
     }
     '/_authed/': {
@@ -114,6 +128,7 @@ const AuthedRouteWithChildren =
 
 export interface FileRoutesByFullPath {
   '': typeof AuthedRouteWithChildren
+  '/login': typeof LoginRoute
   '/': typeof AuthedIndexRoute
   '/boards/$boardId': typeof AuthedBoardsBoardIdRoute
   '/workspaces/$workspaceId': typeof AuthedWorkspacesWorkspaceIdRoute
@@ -121,6 +136,7 @@ export interface FileRoutesByFullPath {
 }
 
 export interface FileRoutesByTo {
+  '/login': typeof LoginRoute
   '/': typeof AuthedIndexRoute
   '/boards/$boardId': typeof AuthedBoardsBoardIdRoute
   '/workspaces/$workspaceId': typeof AuthedWorkspacesWorkspaceIdRoute
@@ -130,6 +146,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRoute
   '/_authed': typeof AuthedRouteWithChildren
+  '/login': typeof LoginRoute
   '/_authed/': typeof AuthedIndexRoute
   '/_authed/boards/$boardId': typeof AuthedBoardsBoardIdRoute
   '/_authed/workspaces/$workspaceId': typeof AuthedWorkspacesWorkspaceIdRoute
@@ -140,12 +157,14 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | ''
+    | '/login'
     | '/'
     | '/boards/$boardId'
     | '/workspaces/$workspaceId'
     | '/workspaces/$workspaceId/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/login'
     | '/'
     | '/boards/$boardId'
     | '/workspaces/$workspaceId'
@@ -153,6 +172,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_authed'
+    | '/login'
     | '/_authed/'
     | '/_authed/boards/$boardId'
     | '/_authed/workspaces/$workspaceId'
@@ -162,10 +182,12 @@ export interface FileRouteTypes {
 
 export interface RootRouteChildren {
   AuthedRoute: typeof AuthedRouteWithChildren
+  LoginRoute: typeof LoginRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
   AuthedRoute: AuthedRouteWithChildren,
+  LoginRoute: LoginRoute,
 }
 
 export const routeTree = rootRoute
@@ -178,7 +200,8 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/_authed"
+        "/_authed",
+        "/login"
       ]
     },
     "/_authed": {
@@ -189,6 +212,9 @@ export const routeTree = rootRoute
         "/_authed/workspaces/$workspaceId",
         "/_authed/workspaces_/$workspaceId/settings"
       ]
+    },
+    "/login": {
+      "filePath": "login.tsx"
     },
     "/_authed/": {
       "filePath": "_authed/index.tsx",

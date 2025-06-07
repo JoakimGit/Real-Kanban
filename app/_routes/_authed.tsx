@@ -1,6 +1,6 @@
-import { SignIn, useAuth } from '@clerk/tanstack-react-start';
+import { useAuth } from '@clerk/tanstack-react-start';
 import { convexQuery } from '@convex-dev/react-query';
-import { createFileRoute, Outlet } from '@tanstack/react-router';
+import { createFileRoute, Navigate, Outlet } from '@tanstack/react-router';
 import { api } from 'convex/_generated/api';
 import { HeaderBar } from '~/components/layout/header-bar';
 import { AppSidebar } from '~/components/layout/sidebar/app-sidebar';
@@ -21,12 +21,7 @@ function ProtectedLayout() {
   if (!isSignedIn) {
     return (
       <div className="flex items-center justify-center p-12">
-        <SignIn
-          routing="hash"
-          forceRedirectUrl={
-            typeof window !== 'undefined' ? window.location.href : ''
-          }
-        />
+        <Navigate to="/login" />
       </div>
     );
   }
