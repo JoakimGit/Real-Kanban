@@ -7,7 +7,12 @@ import {
   useNavigate,
 } from '@tanstack/react-router';
 import { api } from 'convex/_generated/api';
-import { ArrowLeft, PlusIcon } from 'lucide-react';
+import {
+  ArrowLeft,
+  MoreHorizontalIcon,
+  PlusIcon,
+  Trash2Icon,
+} from 'lucide-react';
 import { BoardWorkspaceForm } from '~/components/layout/sidebar/board-workspace-form';
 import { Button } from '~/components/ui/button';
 import {
@@ -17,6 +22,12 @@ import {
   CardHeader,
   CardTitle,
 } from '~/components/ui/card';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '~/components/ui/dropdown-menu';
 import {
   Popover,
   PopoverClose,
@@ -53,6 +64,10 @@ function RouteComponent() {
       workspaces.find((ws) => ws.workspace?._id === workspaceId),
   });
 
+  const { mutate: deleteBoard } = useMutation({
+    mutationFn: useConvexMutation(api.boards.deleteBoard),
+  });
+
   const goBack = () => navigate({ to: '/' });
 
   const isOwner = useWorkspacePermission(workspaceId, 'owner');
@@ -70,9 +85,7 @@ function RouteComponent() {
             <h1 className="text-2xl font-bold tracking-normal">
               {workspace.name}
             </h1>
-            <p className="text-muted-foreground">
-              Select a board to view its tasks
-            </p>
+            <p className="text-muted-foreground">{workspace.description}</p>
           </div>
 
           {isOwner && (
@@ -116,9 +129,38 @@ function RouteComponent() {
                 className="flex flex-col h-full cursor-pointer transition-all hover:shadow-md"
               >
                 <CardHeader className="pb-2">
-                  <div
-                    className={`w-12 h-1.5 rounded-full mb-2 ${board.color}`}
-                  />
+                  <div className="flex items-center justify-between">
+                    <span
+                      className={`w-12 h-1.5 rounded-full mb-2 ${board.color}`}
+                    />
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="size-6">
+                          <MoreHorizontalIcon className="size-4" />
+                          <span className="sr-only">Column actions</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const confirmed = confirm(
+                              'Are you sure you want to delete this board? This action will delete all items inside the board.',
+                            );
+
+                            if (!confirmed) return;
+                            deleteBoard({ boardId: board._id });
+                          }}
+                          className="cursor-pointer text-destructive"
+                        >
+                          <Trash2Icon className="mr-2 size-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+
                   <CardTitle>{board.name}</CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground grow">

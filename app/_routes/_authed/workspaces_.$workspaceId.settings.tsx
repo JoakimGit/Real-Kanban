@@ -1,9 +1,15 @@
 import { convexQuery, useConvexMutation } from '@convex-dev/react-query';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { api } from 'convex/_generated/api';
 import { Doc, Id } from 'convex/_generated/dataModel';
-import { Check, MoreVerticalIcon, PencilIcon, Trash2Icon } from 'lucide-react';
+import {
+  Check,
+  MoreHorizontalIcon,
+  MoreVerticalIcon,
+  PencilIcon,
+  Trash2Icon,
+} from 'lucide-react';
 import { useState } from 'react';
 import * as v from 'valibot';
 import { BoardWorkspaceForm } from '~/components/layout/sidebar/board-workspace-form';
@@ -43,6 +49,7 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const workspaceId = Route.useParams().workspaceId as Id<'workspaces'>;
+  const navigate = useNavigate({ from: Route.fullPath });
 
   const isOwner = useWorkspacePermission(workspaceId, 'owner');
 
@@ -56,6 +63,10 @@ function RouteComponent() {
 
   const { mutate: updateWorkspace, isPending } = useMutation({
     mutationFn: useConvexMutation(api.workspaces.updateWorkspace),
+  });
+
+  const { mutate: deleteWorkspace } = useMutation({
+    mutationFn: useConvexMutation(api.workspaces.deleteWorkspace),
   });
 
   const { mutate: createLabel } = useMutation({
@@ -106,8 +117,33 @@ function RouteComponent() {
             className="space-y-4 max-w-2xl mx-auto text-left"
           >
             <Card>
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{workspace.name}</CardTitle>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="size-6">
+                      <MoreHorizontalIcon className="size-4" />
+                      <span className="sr-only">Workspace actions</span>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => {
+                        const confirmed = confirm(
+                          'Are you sure you want to delete this workspace? This will delete everything associated with the workspace.',
+                        );
+                        if (!confirmed) return;
+                        deleteWorkspace({ workspaceId: workspace._id });
+                        navigate({ to: '/' });
+                      }}
+                      className="cursor-pointer text-destructive"
+                    >
+                      <Trash2Icon className="mr-2 size-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </CardHeader>
               <CardContent>
                 <BoardWorkspaceForm
