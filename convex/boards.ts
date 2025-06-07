@@ -8,6 +8,7 @@ import {
   ensureIsWorkspaceMember,
   ensureIsWorkspaceOwner,
 } from './model/workspace';
+import * as Boards from './model/board';
 
 export const createBoard = mutation({
   args: {
@@ -27,8 +28,7 @@ export const deleteBoard = mutation({
     boardId: v.id('boards'),
   },
   handler: async (ctx, { boardId }) => {
-    await ensureIsBoardWorkspaceOwner(ctx, boardId);
-    await ctx.db.delete(boardId);
+    await Boards.deleteBoard(ctx, boardId);
   },
 });
 
